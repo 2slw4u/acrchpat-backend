@@ -8,6 +8,8 @@ services:
       - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+        - shared-network
 
   loanservice:
     build:
@@ -17,6 +19,8 @@ services:
       - "5002:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+        - shared-network
 
   userservice:
     build:
@@ -26,3 +30,9 @@ services:
       - "5003:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
+    networks:
+        - shared-network
+
+networks:
+  shared-network:
+    external: true
