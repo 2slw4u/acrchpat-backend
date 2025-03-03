@@ -10,7 +10,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connect
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(); 
 builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 builder.Services.AddScoped<IRateService, RateService>();
