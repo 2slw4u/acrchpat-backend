@@ -10,7 +10,7 @@ builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connect
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddSwaggerGen(); 
 builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 builder.Services.AddScoped<IRateService, RateService>();
@@ -19,9 +19,19 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
+    try
+    {
+        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        Console.WriteLine("Applying migrations...");
+        db.Database.Migrate();
+        Console.WriteLine("Migrations applied successfully.");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Migration failed: {ex.Message}");
+    }
 }
+
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
