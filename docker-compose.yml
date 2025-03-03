@@ -2,42 +2,42 @@ version: '3.8'
 services:
   postgres-core:
     image: postgres:17
-    container_name: postgres_db
+    container_name: postgres_core_db
     restart: always
     environment:
       POSTGRES_USER: coreuser
       POSTGRES_PASSWORD: corepassword
       POSTGRES_DB: coredb
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_core_data:/var/lib/postgresql/data
 
   postgres-loan:
     image: postgres:17
-    container_name: postgres_db
+    container_name: postgres_loan_db
     restart: always
     environment:
       POSTGRES_USER: loanuser
       POSTGRES_PASSWORD: loanpassword
       POSTGRES_DB: loandb
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_loan_data:/var/lib/postgresql/data
 
   postgres-user:
     image: postgres:17
-    container_name: postgres_db
+    container_name: postgres_user_db
     restart: always
     environment:
       POSTGRES_USER: useruser
       POSTGRES_PASSWORD: userpassword
       POSTGRES_DB: userdb
     ports:
-      - "5432:5432"
+      - "5435:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_user_data:/var/lib/postgresql/data
 
   coreservice:
     build:
@@ -48,7 +48,7 @@ services:
       - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=coredb;Username=coreuser;Password=corepassword
+      - ConnectionStrings__DefaultConnection=Host=postgres-core;Port=5432;Database=coredb;Username=coreuser;Password=corepassword
 
   loanservice:
     build:
@@ -59,7 +59,7 @@ services:
       - "5002:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=loandb;Username=loanuser;Password=loanpassword
+      - ConnectionStrings__DefaultConnection=Host=postgres-loan;Port=5432;Database=loandb;Username=loanuser;Password=loanpassword
 
   userservice:
     build:
@@ -70,7 +70,9 @@ services:
       - "5003:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=userdb;Username=useruser;Password=userpassword
+      - ConnectionStrings__DefaultConnection=Host=postgres-user;Port=5432;Database=userdb;Username=useruser;Password=userpassword
 
 volumes:
-  postgres_data:
+  postgres_core_data:
+  postgres_loan_data:
+  postgres_user_data:
