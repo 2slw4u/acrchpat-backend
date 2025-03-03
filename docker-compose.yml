@@ -1,38 +1,76 @@
 version: '3.8'
 services:
+  postgres-core:
+    image: postgres:17
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: coreuser
+      POSTGRES_PASSWORD: corepassword
+      POSTGRES_DB: coredb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres-loan:
+    image: postgres:17
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: loanuser
+      POSTGRES_PASSWORD: loanpassword
+      POSTGRES_DB: loandb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  postgres-user:
+    image: postgres:17
+    container_name: postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: useruser
+      POSTGRES_PASSWORD: userpassword
+      POSTGRES_DB: userdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
   coreservice:
     build:
       context: ./CoreService
-      dockerfile: Dockerfile
+    depends_on:
+      - postgres-core
     ports:
       - "5001:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-    networks:
-        - shared-network
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=coredb;Username=coreuser;Password=corepassword
 
   loanservice:
     build:
       context: ./LoanService
-      dockerfile: Dockerfile
+    depends_on:
+      - postgres-loan
     ports:
       - "5002:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-    networks:
-        - shared-network
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=loandb;Username=loanuser;Password=loanpassword
 
   userservice:
     build:
       context: ./UserService
-      dockerfile: Dockerfile
+    depends_on:
+      - postgres-user
     ports:
       - "5003:80"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-    networks:
-        - shared-network
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=userdb;Username=useruser;Password=userpassword
 
-networks:
-  shared-network:
-    external: true
+volumes:
+  postgres_data:
