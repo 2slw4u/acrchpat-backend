@@ -14,6 +14,7 @@ builder.Services.AddSwaggerGen();
 builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 builder.Services.AddScoped<IRateService, RateService>();
+builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
 
 var app = builder.Build();
 

@@ -24,6 +24,7 @@ namespace LoanService.Controllers
         /// <response code="500">Ошибка сервера</response>
         [HttpPost("new")]
         [ProducesResponseType(typeof(Guid), 200)]
+        [ProducesResponseType(typeof(ResponseModel), 400)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
         public async Task<IActionResult> CreateRate(RateCreateModel model)
         {
@@ -50,7 +51,7 @@ namespace LoanService.Controllers
         /// </summary>
         /// <response code="200">Список получен</response>
         /// <response code="500">Ошибка сервера</response>
-        [HttpPost("list")]
+        [HttpGet("list")]
         [ProducesResponseType(typeof(List<RateDto>), 200)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
         public async Task<IActionResult> RateList()
