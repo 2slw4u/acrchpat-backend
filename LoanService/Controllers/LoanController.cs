@@ -24,18 +24,18 @@ public class LoanController : ControllerBase
     /// <response code="200">Всё ок</response>
     /// <response code="400">Invalid arguments for filtration/pagination</response>
     /// <response code="500">Ошибка сервера</response>
-    [HttpPost("terms")]
+    [HttpGet("terms")]
     [ProducesResponseType(typeof(LoanPreviewDto), 200)]
     [ProducesResponseType(typeof(ResponseModel), 400)]
     [ProducesResponseType(typeof(ResponseModel), 500)]
     public async Task<IActionResult> CalculateLoan(
-        [FromQuery][Range(1, Int32.MaxValue)] float amount,
+        [FromQuery][Range(1, Int32.MaxValue)] float givenMoney,
         [FromQuery][Range(1, Int32.MaxValue)] int termMonths,
         [FromQuery] Guid rateId)
     {
         try
         {
-            var dto = await _loanService.CalculateLoan(amount, termMonths, rateId);
+            var dto = await _loanService.CalculateLoan(givenMoney, termMonths, rateId);
 
             return Ok(dto);
         }
