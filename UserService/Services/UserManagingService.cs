@@ -78,6 +78,7 @@ namespace UserService.Services
 		public async Task<UserDto> GetUser() 
 		{
 			var user = await _authenticationService.Authenticate();
+			_logger.LogInformation(user.ToString());
 
 			var userDto = new UserDto { Email = user.Email, FullName = user.FullName, Phone = user.PhoneNumber, Roles = user.Roles.Select(r => new RoleDto { Name = r.Name, Id = r.Id }).ToList(), Id = user.Id, 
 			IsBanned = user.Bans.Any(b => b.BanEnd == null)};
@@ -87,7 +88,7 @@ namespace UserService.Services
 
 		public async Task<List<UserDto>> GetUsers(Guid? role)
 		{
-			IQueryable<UserEntity> query = _context.Users.Include(u => u.Roles);
+			IQueryable<UserEntity> query = _context.Users.Include(u => u.Roles).Include(u => u.Bans);
 
 			if (role.HasValue)
 			{
@@ -102,6 +103,7 @@ namespace UserService.Services
 				FullName = u.FullName,
 				Email = u.Email,
 				Phone = u.PhoneNumber,
+				IsBanned = u.Bans.Any(b => b.BanEnd == null),
 				Roles = u.Roles.Select(r => new RoleDto
 				{
 					Id = r.Id,

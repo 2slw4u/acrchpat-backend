@@ -6,7 +6,7 @@ using UserService.Services.Interfaces;
 namespace UserService.Controllers
 {
 	[ApiController]
-	[Route("api/[controller]")]
+	[Route("api/user")]
 	public class UserController : ControllerBase
     {
 		private readonly IUserManagingService _userService;
@@ -51,7 +51,7 @@ namespace UserService.Controllers
 		}
 
 		[HttpGet]
-		[Route("users")]
+		[Route("all")]
 		[Authorize]
 		public async Task<IActionResult> GetUsers([FromQuery] Guid? role)
 		{

@@ -4,7 +4,7 @@ using UserService.Services.Interfaces;
 namespace UserService.Controllers
 {
 	[ApiController]
-	[Route("api/[controller]")]
+	[Route("api/roles")]
 	public class RolesController : ControllerBase
     {
         private readonly IRolesService _rolesService;

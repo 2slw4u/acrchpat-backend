@@ -21,7 +21,7 @@ namespace UserService.Services
 			{
 				new Claim(ClaimTypes.Email, user.Email),
 				new Claim(ClaimTypes.MobilePhone, user.PhoneNumber),
-				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
+				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
             };
 
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));

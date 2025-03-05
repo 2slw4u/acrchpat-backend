@@ -37,6 +37,7 @@ namespace UserService.Services
 			}
 			var user = await _context.Users
 				.Include(u => u.Roles)
+				.Include(u => u.Bans)
 				.FirstOrDefaultAsync(u => u.Id == userId);
 
 			return user;

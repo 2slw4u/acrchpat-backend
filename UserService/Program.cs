@@ -83,6 +83,7 @@ builder.Services.AddScoped<IUserManagingService, UserManagingService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<IBanService, BanService>();
 //builder.Services.AddSingleton<AuthenticationServiceFactory>();
 
 var app = builder.Build();
