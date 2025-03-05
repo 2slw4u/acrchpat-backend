@@ -16,11 +16,22 @@ var builder = WebApplication.CreateBuilder(args);
 var connection = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<AppDbContext>(options => options.UseNpgsql(connection));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAll",
+        policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .AllowAnyMethod()
+                  .AllowAnyHeader();
+        });
+});
+
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
-//builder.WebHost.UseUrls("http://0.0.0.0:80");
+builder.WebHost.UseUrls("http://0.0.0.0:80");
 
 builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
 {
@@ -101,7 +112,7 @@ catch (Exception ex)
 
 app.UseSwagger();
 app.UseSwaggerUI();
-
+app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
