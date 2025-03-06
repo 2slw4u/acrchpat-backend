@@ -11,8 +11,6 @@ namespace UserService.Services.Interfaces
 		Task<List<UserDto>> GetUsers(Guid? role);
 		Task<UserPagedListDto> SearchUser(Guid? Id, RoleEntity[]? Roles, string? Name, string? PhoneNumber, string? Email);
 		Task<AuthenticationResponse> CreateUser( UserCreateDto newUser);
-		Task<Response> BanUser(Guid userId);
-		Task<Response> UnbanUser(Guid userId);
 
 	}
 }

@@ -14,8 +14,8 @@ namespace UserService.Utils
 
 			if (!context.Roles.Any() && !context.Users.Any())
 			{
-				var employeeRole = new RoleEntity { Id = Guid.NewGuid(), Name = "Employee" };
-				var clientRole = new RoleEntity { Id = Guid.NewGuid(), Name = "Client" };
+				var employeeRole = new RoleEntity { Id = Guid.NewGuid(), Name = "Employee", NormalizedName = "EMPLOYEE" };
+				var clientRole = new RoleEntity { Id = Guid.NewGuid(), Name = "Client", NormalizedName = "CLIENT" };
 
 				context.Roles.AddRange(employeeRole, clientRole);
 				context.SaveChanges();
