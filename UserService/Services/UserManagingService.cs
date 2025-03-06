@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using UserService.Database;
 using UserService.Models.DTOs;
 using UserService.Models.Entities;
+using UserService.Models.Exceptions;
 using UserService.Services.Interfaces;
 
 namespace UserService.Services
@@ -13,20 +14,24 @@ namespace UserService.Services
 		private readonly ILogger<UserManagingService> _logger;
 		private readonly IAuthenticationService _authenticationService;
 		private readonly IRolesService _rolesService;
-		private readonly IPasswordHasher<UserEntity> _passwordHasher;
+		private readonly UserManager<UserEntity> _userManager;
 
-		public UserManagingService(AppDbContext context, ILogger<UserManagingService> logger, IAuthenticationService authenticationService, IRolesService rolesService, IPasswordHasher<UserEntity> passwordHasher)
+		public UserManagingService(
+			AppDbContext context,
+			ILogger<UserManagingService> logger,
+			IAuthenticationService authenticationService,
+			IRolesService rolesService,
+			UserManager<UserEntity> userManager)
 		{
 			_context = context;
 			_logger = logger;
 			_authenticationService = authenticationService;
 			_rolesService = rolesService;
-			_passwordHasher = passwordHasher;
+			_userManager = userManager;
 		}
 
 		public async Task<AuthenticationResponse> Register(UserCreateDto newUserData)
 		{
-
 			await ValidateUserModel(newUserData);
 
 			var newUser = await AddUserToDatabase(newUserData);
@@ -36,14 +41,13 @@ namespace UserService.Services
 			return response;
 		}
 
-		public async Task<AuthenticationResponse> CreateUser( UserCreateDto newUserData)
+		public async Task<AuthenticationResponse> CreateUser(UserCreateDto newUserData)
 		{
-
 			var user = await _authenticationService.Authenticate();
 
 			if (!await IsEmployee(user))
 			{
-				throw new Exception("User isn't permitted to create new users");
+				throw new ForbiddenException("User isn't permitted to create new users");
 			}
 
 			await ValidateUserModel(newUserData);
@@ -55,19 +59,18 @@ namespace UserService.Services
 			return response;
 		}
 
-		public async Task<AuthenticationResponse> Login(LoginDto data) 
+		public async Task<AuthenticationResponse> Login(LoginDto data)
 		{
 			var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == data.Phone);
-
 			if (user == null)
 			{
-				throw new ArgumentException("Invalid login credentials.");
+				throw new BadRequestException("Invalid login credentials.");
 			}
 
-			var verificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, data.Password);
+			var verificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, data.Password);
 			if (verificationResult == PasswordVerificationResult.Failed)
 			{
-				throw new ArgumentException("Invalid login credentials.");
+				throw new BadRequestException("Invalid login credentials.");
 			}
 
 			var response = _authenticationService.CreateAuthCredentials(user);
@@ -75,13 +78,19 @@ namespace UserService.Services
 			return response;
 		}
 
-		public async Task<UserDto> GetUser() 
+		public async Task<UserDto> GetUser()
 		{
 			var user = await _authenticationService.Authenticate();
-			_logger.LogInformation(user.ToString());
 
-			var userDto = new UserDto { Email = user.Email, FullName = user.FullName, Phone = user.PhoneNumber, Roles = user.Roles.Select(r => new RoleDto { Name = r.Name, Id = r.Id }).ToList(), Id = user.Id, 
-			IsBanned = user.Bans.Any(b => b.BanEnd == null)};
+			var userDto = new UserDto
+			{
+				Id = user.Id,
+				Email = user.Email,
+				FullName = user.FullName,
+				Phone = user.PhoneNumber,
+				Roles = user.Roles.Select(r => new RoleDto { Name = r.Name, Id = r.Id }).ToList(),
+				IsBanned = user.Bans.Any(b => b.BanEnd == null)
+			};
 
 			return userDto;
 		}
@@ -104,25 +113,22 @@ namespace UserService.Services
 				Email = u.Email,
 				Phone = u.PhoneNumber,
 				IsBanned = u.Bans.Any(b => b.BanEnd == null),
-				Roles = u.Roles.Select(r => new RoleDto
-				{
-					Id = r.Id,
-					Name = r.Name
-				}).ToList()
+				Roles = u.Roles.Select(r => new RoleDto { Id = r.Id, Name = r.Name }).ToList()
 			});
 
 			return result.ToList();
 		}
 
-		public async Task<UserPagedListDto> SearchUser(Guid? Id, RoleEntity[]? Roles, string? Name, string? Phone, string? Email) { throw new NotImplementedException(); }
-		public async Task<Response> BanUser(Guid userId) { throw new NotImplementedException(); }
-		public async Task<Response> UnbanUser(Guid userId) { throw new NotImplementedException(); }
+		public async Task<UserPagedListDto> SearchUser(Guid? Id, RoleEntity[]? Roles, string? Name, string? Phone, string? Email)
+		{
+			throw new NotImplementedException();
+		}
 
 		private async Task<bool> IsEmployee(UserEntity user)
 		{
-			return user.Roles.Contains(await _rolesService.FindByName("Employee"));
+			var employeeRole = await _rolesService.FindByName("Employee");
+			return user.Roles.Contains(employeeRole);
 		}
-
 		private async Task<UserEntity> AddUserToDatabase(UserCreateDto userDto)
 		{
 			var roles = await _context.Roles
@@ -135,35 +141,48 @@ namespace UserService.Services
 				FullName = userDto.FullName,
 				PhoneNumber = userDto.PhoneNumber,
 				Email = userDto.Email,
+				UserName = userDto.Email,
 				Roles = roles
 			};
 
-			newUser.PasswordHash = _passwordHasher.HashPassword(newUser, userDto.Password);
+			var result = await _userManager.CreateAsync(newUser, userDto.Password);
+			if (!result.Succeeded)
+			{
+				var errors = string.Join(", ", result.Errors.Select(e => e.Description));
+				throw new BadRequestException($"User creation failed: {errors}");
+			}
 
-			_context.Users.Add(newUser);
-
-			await _context.SaveChangesAsync();
+			foreach (var role in roles)
+			{
+				var addToRoleResult = await _userManager.AddToRoleAsync(newUser, role.Name);
+				if (!addToRoleResult.Succeeded)
+				{
+					var errors = string.Join(", ", addToRoleResult.Errors.Select(e => e.Description));
+					throw new BadRequestException($"Adding to role '{role.Name}' failed: {errors}");
+				}
+			}
 
 			return newUser;
 		}
 
 		private async Task ValidateUserModel(UserCreateDto user)
 		{
-			await ValidateDublicateField(user, "Email");
-			await ValidateDublicateField(user, "PhoneNumber");
+			await ValidateDuplicateField(user, "Email");
+			await ValidateDuplicateField(user, "PhoneNumber");
 
-			var roles = user.Roles.All( r =>  _context.Roles.FirstOrDefault(role => role.Id == r) != null);
-			if (!roles)
+			var rolesExist = user.Roles.All(r => _context.Roles.FirstOrDefault(role => role.Id == r) != null);
+			if (!rolesExist)
 			{
-				throw new ArgumentException($"Id does not match any in the available pull of roles");
+				throw new BadRequestException("One or more role IDs do not match any available roles");
 			}
 		}
-		private async Task ValidateDublicateField(UserCreateDto user, string fieldName)
+
+		private async Task ValidateDuplicateField(UserCreateDto user, string fieldName)
 		{
 			var propertyInfo = typeof(UserCreateDto).GetProperty(fieldName);
 			if (propertyInfo == null)
 			{
-				throw new ArgumentException($"Field {fieldName} is not present in {nameof(UserCreateDto)}");
+				throw new Exception($"Field {fieldName} is not present in {nameof(UserCreateDto)}");
 			}
 
 			string fieldValue = (propertyInfo.GetValue(user) as string)?.ToLower().Trim();
@@ -173,14 +192,24 @@ namespace UserService.Services
 				return;
 			}
 
-			bool exists = await _context.Users
-				.AnyAsync(u => EF.Property<string>(u, fieldName).ToLower() == fieldValue);
+			bool exists;
+			if (fieldName == "Email")
+			{
+				exists = await _userManager.Users.AnyAsync(u => u.Email.ToLower() == fieldValue);
+			}
+			else if (fieldName == "PhoneNumber")
+			{
+				exists = await _userManager.Users.AnyAsync(u => u.PhoneNumber.ToLower() == fieldValue);
+			}
+			else
+			{
+				exists = await _context.Users.AnyAsync(u => EF.Property<string>(u, fieldName).ToLower() == fieldValue);
+			}
 
 			if (exists)
 			{
-				throw new ArgumentException($"User with {fieldName} '{fieldValue}' already exists");
+				throw new BadRequestException($"User with {fieldName} '{fieldValue}' already exists");
 			}
 		}
-
 	}
 }
