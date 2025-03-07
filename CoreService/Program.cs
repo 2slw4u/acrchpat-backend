@@ -1,3 +1,4 @@
+using CoreService.Integrations.RabbitMQ;
 using CoreService.Models.Database;
 using CoreService.Services;
 using CoreService.Services.Interfaces;
@@ -43,6 +44,7 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddSingleton<IRabbitMQService, RabbitMQService>();
 builder.Services.AddMemoryCache();
 
 
