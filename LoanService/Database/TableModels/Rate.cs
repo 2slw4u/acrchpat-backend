@@ -5,7 +5,7 @@ namespace LoanService.Database.TableModels;
 
 public class Rate
 {
-    [Required]
+    [Key]
     public Guid Id { get; set; }
     
     [Required]

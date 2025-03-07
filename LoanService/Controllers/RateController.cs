@@ -1,20 +1,16 @@
+using LoanService.Attributes;
 using LoanService.Models.General;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoanService.Controllers
 {
     [ApiController]
     [Route("api/rate")]
-    public class RateController : ControllerBase
+    public class RateController(IRateService rateService) : ControllerBase
     {
-        private readonly IRateService _rateService;
-
-        public RateController(IRateService rateService)
-        {
-            _rateService = rateService;
-        }
 
         /// <summary>
         /// Создать новый тариф для кредита
@@ -23,6 +19,8 @@ namespace LoanService.Controllers
         /// <response code="400">Invalid arguments for filtration/pagination</response>
         /// <response code="500">Ошибка сервера</response>
         [HttpPost("new")]
+        [Authorize]
+        [RoleAuthorize("Employee")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(ResponseModel), 400)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
@@ -35,7 +33,7 @@ namespace LoanService.Controllers
                     return BadRequest(ModelState);
                 }
                 
-                var id = await _rateService.CreateRate(model);
+                var id = await rateService.CreateRate(model);
                 
                 return Ok(id);
             }
@@ -52,18 +50,19 @@ namespace LoanService.Controllers
         /// <response code="200">Список получен</response>
         /// <response code="500">Ошибка сервера</response>
         [HttpGet("list")]
+        [Authorize]
         [ProducesResponseType(typeof(List<RateDto>), 200)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
         public async Task<IActionResult> RateList()
         {
             try
             {
-                return Ok(await _rateService.RateList());
+                return Ok(await rateService.RateList());
             }
             catch (Exception e)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseModel { Status = "Error", Message = e.Message });
+                    new ResponseModel { Status = "Internal Error", Message = e.Message });
             }
         }
     }
