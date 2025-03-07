@@ -2,21 +2,15 @@
 using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Services.Interfaces;
-using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace LoanService.Controllers;
 
 [ApiController]
 [Microsoft.AspNetCore.Components.Route("api/loan")]
-public class LoanController : ControllerBase
+public class LoanController(ILoanManagerService loanService) : ControllerBase
 {
-    private readonly ILoanManagerService _loanService;
-
-    public LoanController(ILoanManagerService loanService)
-    {
-        _loanService = loanService;
-    }
 
     /// <summary>
     /// Рассчитать кредит
@@ -25,6 +19,7 @@ public class LoanController : ControllerBase
     /// <response code="400">Invalid arguments for filtration/pagination</response>
     /// <response code="500">Ошибка сервера</response>
     [HttpGet("terms")]
+    [Authorize]
     [ProducesResponseType(typeof(LoanPreviewDto), 200)]
     [ProducesResponseType(typeof(ResponseModel), 400)]
     [ProducesResponseType(typeof(ResponseModel), 500)]
@@ -35,7 +30,7 @@ public class LoanController : ControllerBase
     {
         try
         {
-            var dto = await _loanService.CalculateLoan(givenMoney, termMonths, rateId);
+            var dto = await loanService.CalculateLoan(givenMoney, termMonths, rateId);
 
             return Ok(dto);
         }
