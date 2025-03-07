@@ -1,6 +1,8 @@
 ﻿using AutoMapper;
 using CoreService.Models.Database;
+using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Exceptions;
 using CoreService.Models.Request.Support;
 using CoreService.Models.Response.Support;
 using CoreService.Services.Interfaces;
@@ -21,20 +23,16 @@ namespace CoreService.Services
 
         public async Task ChangeClientAccountStatus(HttpContext httpContext, ChangeClientAccountStatusRequest request)
         {
-            throw new NotImplementedException();
+            throw new OperationNotImplemented();
         }
 
         public async Task<GetClientAccountDetailsResponse> GetClientAccountDetails(HttpContext httpContext, GetClientAccountDetailsRequest request)
         {
-            throw new NotImplementedException();
+            throw new OperationNotImplemented();
         }
 
         public async Task<GetClientAccountsResponse> GetClientAccounts(HttpContext httpContext, GetClientAccountsRequest request)
         {
-            if (request.Users.Count == 0)
-            {
-                throw new BadHttpRequestException("No users specified", 422);
-            }
             var accounts = await _dbContext.Accounts.Where(x => request.Users.Contains(x.Id)).ToListAsync();
             return new GetClientAccountsResponse
             {
@@ -44,7 +42,7 @@ namespace CoreService.Services
 
         public async Task<GetClientTransactionHistoryResponse> GetClientTransactionHistory(HttpContext httpContext, GetClientTransactionHistoryRequest request)
         {
-            var transactions = await _dbContext.Accounts.Where(x => x.Id == request.userId).ToListAsync();
+            var transactions = await _dbContext.Transactions.Where(x => x.Account.UserId == request.userId).ToListAsync();
             return new GetClientTransactionHistoryResponse
             {
                 Transactions = transactions.Select(x => _mapper.Map<DetailedTransactionDTO>(x)).ToList()
