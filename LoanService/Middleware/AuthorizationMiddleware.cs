@@ -4,11 +4,9 @@ using LoanService.Models.General;
 
 namespace LoanService.Middleware;
 
-public class AuthorizationMiddleware(RequestDelegate next, IConfiguration configuration, IWebHostEnvironment env)
+public class AuthorizationMiddleware(RequestDelegate next, IConfiguration configuration)
 {
-    private readonly string? _backendIp = env.IsDevelopment()
-         ? configuration["Backend:DevIp"]
-         : configuration["Backend:VpaIp"];
+    private readonly string? _backendIp = configuration["Backend:VpaIp"];
     
     public async Task InvokeAsync(HttpContext context)
     {
