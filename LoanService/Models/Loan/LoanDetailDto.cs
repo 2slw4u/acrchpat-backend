@@ -1,4 +1,7 @@
-﻿namespace LoanService.Models.Loan;
+﻿using LoanService.Models.General;
+using LoanService.Models.Rate;
+
+namespace LoanService.Models.Loan;
 
 public class LoanDetailDto
 {
@@ -6,25 +9,25 @@ public class LoanDetailDto
     
     public Guid UserId { get; set; }
     
-    public Guid RateId { get; set; }
+    public RateDto Rate { get; set; }
     
     public LoanStatus Status { get; set; }
     
-    public float GivenMoney { get; set; }
+    public double GivenMoney { get; set; }
     
     public DateTime CreateTime { get; set; }
     
     public DateTime DeadlineTime { get; set; }
     
-    public int TermMonths { get; set; }
+    public int TermDays { get; set; }
     
-    public float MonthlyPayment { get; set; }
+    public double DailyPayment { get; set; }
     
-    public float TotalMoneyToPay { get; set; }
+    public double TotalMoneyToPay { get; set; }
     
-    public float MoneyLeftToPay { get; set; }
+    public double MoneyLeftToPay { get; set; }
     
-    public List<DateTime> RepaymentSchedule { get; set; }
+    public List<PaymentDto> Payments { get; set; }
     
-    public List<Guid> Transactions { get; set; }
+    public List<TransactionDto> Transactions { get; set; }
 }

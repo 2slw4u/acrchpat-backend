@@ -9,4 +9,6 @@ public class AppDbContext : DbContext
     public DbSet<Rate> Rates { get; set; }
     
     public DbSet<Loan> Loans { get; set; }
+    
+    public DbSet<LoanPayment> LoanPayments { get; set; }
 }

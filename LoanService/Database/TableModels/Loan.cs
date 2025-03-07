@@ -24,8 +24,11 @@ public class Loan
     public LoanStatus Status { get; set; }
     
     [Required]
-    public float GivenMoney { get; set; }
+    public double GivenMoney { get; set; }
     
     [Required]
     public List<Guid> Transactions { get; set; }
+    
+    [Required]
+    public List<LoanPayment> Payments { get; set; }
 }

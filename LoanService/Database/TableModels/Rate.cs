@@ -17,5 +17,5 @@ public class Rate
     
     [Required]
     [Range(0.1, 100, ErrorMessage = "Значение должно быть в диапазоне от {1} до {2}.")]
-    public float RateValue { get; set; }
+    public double RateValue { get; set; }
 }
