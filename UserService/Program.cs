@@ -68,7 +68,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSwaggerGen(option =>
 {
-	option.SwaggerDoc("v1", new OpenApiInfo { Title = "Hospital", Version = "1.0" });
+	option.SwaggerDoc("v1", new OpenApiInfo { Title = "User API", Version = "1.0" });
 	option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		In = ParameterLocation.Header,
