@@ -42,6 +42,10 @@ public class AuthorizationMiddleware(RequestDelegate next, IConfiguration config
                 {
                     context.Items["UserId"] = userData.Id;
                 }
+                if (userData?.Roles != null)
+                {
+                    context.Items["Roles"] = userData.Roles;
+                }
             }
             catch (Exception e)
             {
@@ -57,9 +61,4 @@ public class AuthorizationMiddleware(RequestDelegate next, IConfiguration config
 
         await next(context);
     }
-}
-
-public class UserResponse
-{
-    public string Id { get; set; }
 }

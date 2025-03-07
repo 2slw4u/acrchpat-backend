@@ -1,3 +1,4 @@
+using LoanService.Attributes;
 using LoanService.Models.General;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
@@ -19,6 +20,7 @@ namespace LoanService.Controllers
         /// <response code="500">Ошибка сервера</response>
         [HttpPost("new")]
         [Authorize]
+        [RoleAuthorize("Employee")]
         [ProducesResponseType(typeof(Guid), 200)]
         [ProducesResponseType(typeof(ResponseModel), 400)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
@@ -55,14 +57,12 @@ namespace LoanService.Controllers
         {
             try
             {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseModel { Status = "Error", Message = HttpContext.Items["UserId"]?.ToString() });
                 return Ok(await rateService.RateList());
             }
             catch (Exception e)
             {
                 return StatusCode(StatusCodes.Status500InternalServerError,
-                    new ResponseModel { Status = "Error", Message = e.Message });
+                    new ResponseModel { Status = "Internal Error", Message = e.Message });
             }
         }
     }
