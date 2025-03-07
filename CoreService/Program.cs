@@ -1,12 +1,12 @@
 using CoreService.Models.Database;
 using CoreService.Services;
 using CoreService.Services.Interfaces;
+using CoreService.Middlewares.ExceptionHandler;
+
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Add services to the container.
 
 builder.Services.AddCors(options =>
 {
@@ -20,11 +20,10 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
-    //options.CustomOperationIds(e => $"{e.ActionDescriptor.RouteValues["controller"]}_{e.HttpMethod}_{e.HttpMethod}");
     options.SwaggerDoc("v1", new OpenApiInfo
     {
         Title = "ARCHPAT Core Service Api",
@@ -43,9 +42,9 @@ builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITransactionService, TransactionService>();
+builder.Services.AddScoped<ISupportService, SupportService>();
+
 builder.Services.AddMemoryCache();
-
-
 
 builder.Services.AddHttpContextAccessor();
 
@@ -66,14 +65,13 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
-// Configure the HTTP request pipeline.
-//if (app.Environment.IsDevelopment())
-//{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-//}
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+
+app.UseExceptionMiddleware();
 
 app.UseAuthorization();
 
