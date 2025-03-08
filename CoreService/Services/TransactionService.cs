@@ -41,8 +41,9 @@ namespace CoreService.Services
 
         public async Task<GetTransactionsHistoryResponse> GetTransactionsHistory(HttpContext httpContext, GetTransactionsHistoryRequest request)
         {
+            var userId = (Guid)httpContext.Items["UserId"];
             var transactions = _dbContext.Transactions
-                .Where(x => x.Account.UserId == request.user_id);
+                .Where(x => x.Account.UserId == userId);
             if (request.Accounts != null && request.Accounts.Count > 0)
             {
                 transactions = transactions.Where(x => (request.Accounts.Contains(x.Account.Id)));

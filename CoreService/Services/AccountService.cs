@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Configuration.UserSecrets;
 using System.Security.Cryptography;
 using System.Security.Principal;
 
@@ -50,34 +51,12 @@ namespace CoreService.Services
         public async Task<GetAccountDetailsResponse> GetAccountDetails(HttpContext httpContext, GetAccountDetailsRequest request)
         {
             throw new OperationNotNeeded();
-            /*var account = new AccountDTO
-            {
-                Id = request.accountId,
-                Status = Models.Enum.AccountStatus.Opened,
-                Balance = 0.2,
-                Name = "testing"
-            };
-            var response = new GetAccountDetailsResponse
-            {
-                Account = account
-            };
-            if (_memoryCache.TryGetValue<AccountDTO>(request.accountId, out var result))
-            {
-                throw new KeyNotFoundException("This is in cache already" + $"\n{result.Name}");
-            }
-            else
-            {
-                _memoryCache.Set<AccountDTO>(request.accountId, account, new MemoryCacheEntryOptions
-                {
-                    AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(20)
-                });
-                throw new NotImplementedException();
-            }*/
         }
 
-        public async Task<GetAccountsResponse> GetAccounts(HttpContext httpContext, GetAccountsRequest request)
+        public async Task<GetAccountsResponse> GetAccounts(HttpContext httpContext)
         {
-            var accounts = await _dbContext.Accounts.Where(x => x.UserId == request.user_id).ToListAsync();
+            var userId = (Guid)httpContext.Items["UserId"];
+            var accounts = await _dbContext.Accounts.Where(x => x.UserId == userId).ToListAsync();
             return new GetAccountsResponse
             {
                 Accounts = accounts.Select(x => _mapper.Map<AccountDTO>(x)).ToList()
