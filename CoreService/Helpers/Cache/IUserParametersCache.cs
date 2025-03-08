@@ -1,5 +1,4 @@
 ﻿using CoreService.Models.Cache;
-using CoreService.Models.Response.User;
 
 namespace CoreService.Helpers.Cache
 {

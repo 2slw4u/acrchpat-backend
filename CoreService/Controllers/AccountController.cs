@@ -1,8 +1,8 @@
 using CoreService.Attributes;
 using CoreService.Models.DTO;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Account;
-using CoreService.Models.Response.Account;
+using CoreService.Models.Http.Request.Account;
+using CoreService.Models.Http.Response.Account;
 using CoreService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;

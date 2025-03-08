@@ -1,5 +1,5 @@
-﻿using CoreService.Models.Request.User;
-using CoreService.Models.Response.User;
+﻿using CoreService.Models.Http.Request.User;
+using CoreService.Models.Http.Response.User;
 
 namespace CoreService.Integrations.Http.UserService
 {

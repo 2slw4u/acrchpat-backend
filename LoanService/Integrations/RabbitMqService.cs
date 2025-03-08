@@ -1,4 +1,4 @@
-﻿using System.Text;
+﻿/*using System.Text;
 using System.Text.Json;
 using RabbitMQ.Client;
 
@@ -62,4 +62,4 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         _channel?.CloseAsync();
         _connection?.CloseAsync();
     }
-}
+}*/

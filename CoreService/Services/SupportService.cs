@@ -3,8 +3,8 @@ using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
 using CoreService.Models.Exceptions;
-using CoreService.Models.Request.Support;
-using CoreService.Models.Response.Support;
+using CoreService.Models.Http.Request.Support;
+using CoreService.Models.Http.Response.Support;
 using CoreService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

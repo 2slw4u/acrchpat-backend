@@ -1,6 +1,6 @@
 ﻿using CoreService.Models.Exceptions;
-using CoreService.Models.Request.User;
-using CoreService.Models.Response.User;
+using CoreService.Models.Http.Request.User;
+using CoreService.Models.Http.Response.User;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Text.Json;

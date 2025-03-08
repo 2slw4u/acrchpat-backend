@@ -1,4 +1,4 @@
-﻿using LoanService.Integrations;
+﻿/*using LoanService.Integrations;
 using LoanService.Models.General;
 using Microsoft.AspNetCore.Mvc;
 
@@ -14,4 +14,4 @@ public class MessageBrokerController(IRabbitMqService rabbitMqService) : Control
         rabbitMqService.SendMessage(transaction);
         return Ok("Всё отправилось");
     }
-}
+}*/

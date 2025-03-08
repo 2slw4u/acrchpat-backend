@@ -1,9 +1,7 @@
 ﻿using CoreService.Attributes;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Account;
-using CoreService.Models.Request.Support;
-using CoreService.Models.Response.Account;
-using CoreService.Models.Response.Support;
+using CoreService.Models.Http.Request.Support;
+using CoreService.Models.Http.Response.Support;
 using CoreService.Services;
 using CoreService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

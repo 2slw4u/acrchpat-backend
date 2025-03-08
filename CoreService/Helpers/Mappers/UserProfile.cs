@@ -1,6 +1,6 @@
 ﻿using AutoMapper;
 using CoreService.Models.Cache;
-using CoreService.Models.Response.User;
+using CoreService.Models.Http.Response.User;
 
 namespace CoreService.Helpers.Mappers
 {

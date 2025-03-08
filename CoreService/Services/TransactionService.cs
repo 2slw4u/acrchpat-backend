@@ -1,11 +1,13 @@
 ﻿using AutoMapper;
 using CoreService.Helpers;
+using CoreService.Integrations.AMQP.RabbitMQ.Producer;
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Enum;
 using CoreService.Models.Exceptions;
-using CoreService.Models.Request.Transaction;
-using CoreService.Models.Response.Transaction;
+using CoreService.Models.Http.Request.Transaction;
+using CoreService.Models.Http.Response.Transaction;
 using CoreService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -15,11 +17,25 @@ namespace CoreService.Services
     {
         private readonly CoreDbContext _dbContext;
         private readonly IMapper _mapper;
+        private readonly IRabbitMqProducerService _rabbitMqProducerService;
 
-        public TransactionService(CoreDbContext dbContext, IMapper mapper)
+        public TransactionService(CoreDbContext dbContext, IMapper mapper, IRabbitMqProducerService rabbitMqProducerService)
         {
             _dbContext = dbContext;
             _mapper = mapper;
+            _rabbitMqProducerService = rabbitMqProducerService;
+        }
+
+        private async Task produceMessage()
+        {
+            await _rabbitMqProducerService.SendTransactionResultMessage(new TransactionResultDTO
+            {
+                Id = Guid.NewGuid(),
+                Amount = 10,
+                Type = TransactionType.Deposit,
+                PerformedAt = DateTime.UtcNow,
+                Successful = true
+            });
         }
 
         public async Task DepositMoneyToAccount(HttpContext httpContext, DepositMoneyToAccountRequest request)
@@ -42,6 +58,9 @@ namespace CoreService.Services
             var transaction = _mapper.Map<TransactionEntity>(request);
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
+            
+            await this.produceMessage();
+            
             await _dbContext.SaveChangesAsync();
         }
 
@@ -65,7 +84,7 @@ namespace CoreService.Services
             }
             return new GetTransactionsDataResponse
             {
-                Transactions = transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
+                Transactions = await transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToListAsync()
             };
         }
 

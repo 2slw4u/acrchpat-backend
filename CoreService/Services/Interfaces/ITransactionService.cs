@@ -1,5 +1,5 @@
-﻿using CoreService.Models.Request.Transaction;
-using CoreService.Models.Response.Transaction;
+﻿using CoreService.Models.Http.Request.Transaction;
+using CoreService.Models.Http.Response.Transaction;
 
 namespace CoreService.Services.Interfaces
 {

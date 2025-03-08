@@ -1,5 +1,5 @@
-﻿using CoreService.Models.Request.Support;
-using CoreService.Models.Response.Support;
+﻿using CoreService.Models.Http.Request.Support;
+using CoreService.Models.Http.Response.Support;
 
 namespace CoreService.Services.Interfaces
 {

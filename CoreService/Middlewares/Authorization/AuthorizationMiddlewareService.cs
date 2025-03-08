@@ -3,14 +3,8 @@ using CoreService.Helpers;
 using CoreService.Helpers.Cache;
 using CoreService.Integrations.Http.UserService;
 using CoreService.Models.Cache;
-using CoreService.Models.Database.Entity;
-using CoreService.Models.DTO;
 using CoreService.Models.Exceptions;
-using CoreService.Models.Request.Account;
-using CoreService.Models.Request.User;
-using CoreService.Models.Response.User;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Caching.Memory;
+using CoreService.Models.Http.Request.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
