@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CoreService.Helpers;
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
@@ -19,12 +20,10 @@ namespace CoreService.Services
 {
     public class AccountService : IAccountService
     {
-        private readonly IMemoryCache _memoryCache;
         private readonly CoreDbContext _dbContext;
         private readonly IMapper _mapper;
-        public AccountService(IMemoryCache memoryCache, CoreDbContext coreDbContext, IMapper mapper)
+        public AccountService(CoreDbContext coreDbContext, IMapper mapper)
         {
-            _memoryCache = memoryCache;
             _dbContext = coreDbContext;
             _mapper = mapper;
         }
@@ -35,10 +34,15 @@ namespace CoreService.Services
 
         public async Task CloseAccount(HttpContext httpContext, CloseAccountRequest request)
         {
+            var userId = ContextDataHelper.GetUserId(httpContext);
             var account = await _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefaultAsync();
             if (account == null)
             {
                 throw new AccountNotFound();
+            }
+            else if (account.UserId != userId)
+            {
+                throw new UserDoesntOwnTheAccount();
             }
             else if (account.Status == Models.Enum.AccountStatus.Closed)
             {
@@ -55,7 +59,7 @@ namespace CoreService.Services
 
         public async Task<GetAccountsResponse> GetAccounts(HttpContext httpContext)
         {
-            var userId = (Guid)httpContext.Items["UserId"];
+            var userId = ContextDataHelper.GetUserId(httpContext);
             var accounts = await _dbContext.Accounts.Where(x => x.UserId == userId).ToListAsync();
             return new GetAccountsResponse
             {
@@ -65,7 +69,9 @@ namespace CoreService.Services
 
         public async Task OpenNewAccount(HttpContext httpContext, OpenNewAccountRequest request)
         {
+            var userId = ContextDataHelper.GetUserId(httpContext);
             var account = _mapper.Map<AccountEntity>(request.NewAccount);
+            account.UserId = userId;
             await _dbContext.Accounts.AddAsync(account);
             await _dbContext.SaveChangesAsync();
         }

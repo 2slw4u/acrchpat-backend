@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using CoreService.Helpers;
 using CoreService.Helpers.Cache;
 using CoreService.Integrations.Http.UserService;
 using CoreService.Models.Cache;
@@ -63,11 +64,13 @@ namespace CoreService.Middlewares.ExceptionHandler
                 {
                     throw new UserIsBanned();
                 }
-                if (userParameters.Roles != null)
-                {
-                    httpContext.Items["Roles"] = userParameters.Roles;
-                }
+                ContextDataHelper.SetUserRoles(httpContext, userParameters.Roles);
+                ContextDataHelper.SetUserId(httpContext, userParameters.Id);
+                Console.WriteLine($"Data from userService: {userParameters}" +
+                    $"\nData saved to context: userId - {httpContext.Items["UserId"].ToString()}" +
+                    $"\nAnd roles - {httpContext.Items["UserRoles"].ToString()}");
             }
+            await _next(httpContext);
         }
     }
 }
