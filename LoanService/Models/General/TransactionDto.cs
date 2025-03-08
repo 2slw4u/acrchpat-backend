@@ -1,6 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace LoanService.Models.General;
+﻿namespace LoanService.Models.General;
 
 public class TransactionDto
 {

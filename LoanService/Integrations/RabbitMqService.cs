@@ -9,7 +9,7 @@ public class RabbitMqService : IRabbitMqService, IDisposable
     private readonly ConnectionFactory _connectionFactory;
     private IConnection? _connection;
     private IChannel? _channel;
-    private readonly string _queueName = "TestQueue";
+    private readonly string QueueName = "TestQueue";
 
     public RabbitMqService(IConfiguration configuration)
     {
@@ -27,7 +27,7 @@ public class RabbitMqService : IRabbitMqService, IDisposable
         _channel = await _connection.CreateChannelAsync();
         
         await _channel.QueueDeclareAsync(
-            queue: _queueName,
+            queue: QueueName,
             durable: false,
             exclusive: false,
             autoDelete: false,
@@ -52,7 +52,7 @@ public class RabbitMqService : IRabbitMqService, IDisposable
 
         await _channel.BasicPublishAsync(
             exchange: "",
-            routingKey: _queueName,
+            routingKey: QueueName,
             body: body
         );
     }
