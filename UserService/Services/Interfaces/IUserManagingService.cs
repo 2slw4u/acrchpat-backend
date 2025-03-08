@@ -10,7 +10,9 @@ namespace UserService.Services.Interfaces
 		Task<UserDto> GetUser();
 		Task<List<UserDto>> GetUsers(Guid? role);
 		Task<UserPagedListDto> SearchUser(Guid? Id, RoleEntity[]? Roles, string? Name, string? PhoneNumber, string? Email);
-		Task<AuthenticationResponse> CreateUser( UserCreateDto newUser);
+		Task<UserDto> CreateUser( UserCreateDto newUser);
+		Task<ResponseDto> AddRole(Guid user, Guid role);
+		Task<ResponseDto> RemoveRole(Guid user, Guid role);
 
 	}
 }

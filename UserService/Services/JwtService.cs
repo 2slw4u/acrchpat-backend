@@ -1,4 +1,5 @@
 ﻿using Microsoft.IdentityModel.Tokens;
+using System.Data;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -22,7 +23,12 @@ namespace UserService.Services
 				new Claim(ClaimTypes.Email, user.Email),
 				new Claim(ClaimTypes.MobilePhone, user.PhoneNumber),
 				new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            };
+			};
+
+			foreach (var role in user.Roles)
+			{
+				claims.Add(new Claim(ClaimTypes.Role, role.Name));
+			}
 
 			var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]));
 			var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);

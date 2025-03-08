@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using UserService.Models.DTOs;
 using UserService.Services.Interfaces;
 
 namespace UserService.Controllers
@@ -15,6 +16,7 @@ namespace UserService.Controllers
 
 		[HttpGet]
 		[Route("all")]
+		[ProducesResponseType(typeof(List<RoleDto>), 200)]
 		public async  Task<IActionResult> GetRoles()
         {
 			var result = await _rolesService.GetRoles();
