@@ -140,7 +140,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             {
                 Id = loan.Rate.Id,
                 Name = loan.Rate.Name,
-                TwelveDayRate = loan.Rate.RateValue
+                YearlyRate = loan.Rate.RateValue
             },
             CreateTime = loan.CreateTime,
             DeadlineTime = loan.DeadlineTime,
@@ -226,6 +226,6 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
     {
         var dailyRate = ratePercent / (365 * 100);
 
-        return givenMoney * dailyRate / (1 - (double)Math.Pow(1 + dailyRate, -termDays));
+        return givenMoney * dailyRate / (1 - Math.Pow(1 + dailyRate, -termDays));
     }
 }
