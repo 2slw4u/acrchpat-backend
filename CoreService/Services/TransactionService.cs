@@ -45,24 +45,53 @@ namespace CoreService.Services
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task<GetTransactionsHistoryResponse> GetTransactionsHistory(HttpContext httpContext, GetTransactionsHistoryRequest request)
+        public async Task<GetTransactionsDataResponse> GetTransactionsData(HttpContext httpContext, GetTransactionsDataRequest request)
         {
+            if (request.Transactions == null || request.Transactions.Count == 0)
+            {
+                return new GetTransactionsDataResponse();
+            }
             var userId = ContextDataHelper.GetUserId(httpContext);
-            var accounts = await _dbContext.Accounts.Where(x => request.Accounts.Contains(x.Id)).Select(x => x.Id).ToListAsync();
-            if (accounts != request.Accounts)
+            var transactions = _dbContext.Transactions
+                .Where(x => request.Transactions.Contains(x.Id))
+                .OrderByDescending(x => x.PerformedAt);
+            if (request.Transactions.Any(x => !transactions.Select(y => y.Id).Contains(x)))
+            {
+                throw new TransactionNotFound();
+            }
+            else if (transactions.Any(x => x.Account.UserId != userId))
             {
                 throw new UserDoesntOwnTheAccount();
             }
-            var transactions = _dbContext.Transactions
-                .Where(x => x.Account.UserId == userId);
-            if (request.Accounts != null && request.Accounts.Count > 0)
+            return new GetTransactionsDataResponse
             {
-                transactions = transactions.Where(x => (request.Accounts.Contains(x.Account.Id)));
-            }
-            var orderedTransactions = await transactions.OrderByDescending(x => x.PerformedAt).ToListAsync();
+                Transactions = transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
+            };
+        }
+
+        public async Task<GetTransactionsHistoryResponse> GetTransactionsHistory(HttpContext httpContext, GetTransactionsHistoryRequest request)
+        {
+            var userId = ContextDataHelper.GetUserId(httpContext);
+            var accounts = _dbContext.Accounts.Where(x => x.UserId == userId);
+            if (request.Accounts != null  && request.Accounts.Count > 0)
+            {
+                accounts = accounts.Where(x => request.Accounts.Contains(x.Id));
+                if (request.Accounts.Any(x => !accounts.Select(y => y.Id).Contains(x)))
+                {
+                    throw new AccountNotFound();
+                }
+                else if (accounts.Any(x => x.UserId != userId))
+                {
+                    throw new UserDoesntOwnTheAccount();
+                }
+            } 
+            var transactions = await _dbContext.Transactions
+                .Where(x => (accounts.Select(y => y.Id).Contains(x.Account.Id)))
+                .OrderByDescending(x => x.PerformedAt)
+                .ToListAsync();
             return new GetTransactionsHistoryResponse
             {
-                Transactions = orderedTransactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
+                Transactions = transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
             };
         }
 
