@@ -25,7 +25,7 @@ public class RateService(AppDbContext dbContext) : IRateService
             Id = Guid.NewGuid(),
             CreateTime = DateTime.UtcNow,
             Name = model.Name,
-            RateValue = model.TwelveDayRate
+            RateValue = model.YearlyRate
         };
         
         await dbContext.Rates.AddAsync(rate);
@@ -41,7 +41,7 @@ public class RateService(AppDbContext dbContext) : IRateService
             {
                 Id = rate.Id,
                 Name = rate.Name,
-                TwelveDayRate = rate.RateValue
+                YearlyRate = rate.RateValue
             }).ToListAsync();
     }
 }
