@@ -1,6 +1,7 @@
 ﻿using CoreService.Helpers;
 using CoreService.Models.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
+using CoreService.Helpers;
 
 namespace CoreService.Middlewares.Exceptions
 {
@@ -19,11 +20,11 @@ namespace CoreService.Middlewares.Exceptions
             }
             catch (ExceptionToResponseProxy ex)
             {
-                ExceptionHandler.HandleHttpException(context, ex);
+                await ExceptionHandler.HandleHttpException(context, ex);
             }
             catch (Exception ex)
             {
-                ExceptionHandler.HandleSystemException(context, ex);                
+                await ExceptionHandler.HandleSystemException(context, ex);                
             }
         }
     }

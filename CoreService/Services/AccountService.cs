@@ -48,6 +48,10 @@ namespace CoreService.Services
             {
                 throw new AccountIsClosed();
             }
+            else if (account.Balance != 0)
+            {
+                throw new AccountBalanceNotZero();
+            }
             account.Status = Models.Enum.AccountStatus.Closed;
             await _dbContext.SaveChangesAsync();
         }

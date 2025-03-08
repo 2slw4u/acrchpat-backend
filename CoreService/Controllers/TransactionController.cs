@@ -6,6 +6,7 @@ using CoreService.Services;
 using CoreService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel;
 
 namespace CoreService.Controllers
 {
@@ -22,6 +23,7 @@ namespace CoreService.Controllers
 
         [HttpGet]
         [EndpointSummary("(GetTransactionsHistory) Returns history of user transactions")]
+        [Route("history")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
         public async Task<GetTransactionsHistoryResponse> GetTransactionsHistory(GetTransactionsHistoryRequest request)
@@ -47,6 +49,15 @@ namespace CoreService.Controllers
         public async Task WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
         {
             await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);
+        }
+
+        [HttpGet]
+        [EndpointSummary("(GetTransactionData) Return basic data about requested transactions")]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
+        public async Task<GetTransactionsDataResponse> GetTransactionsData(GetTransactionsDataRequest request)
+        {
+            return await _transactionService.GetTransactionsData(HttpContext, request);
         }
     }
 }
