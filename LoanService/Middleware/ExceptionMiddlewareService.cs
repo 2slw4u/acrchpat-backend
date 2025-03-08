@@ -36,6 +36,11 @@ public class ExceptionMiddlewareService(RequestDelegate next, ILogger<ExceptionM
             context.Response.StatusCode = StatusCodes.Status400BadRequest;
             await context.Response.WriteAsJsonAsync(new ResponseModel { Status = "Guid Parsing Error", Message = ex.Message });
         }
+        catch (CannotAcquireException ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+            await context.Response.WriteAsJsonAsync(new ResponseModel { Status = "Cannot Acquire Data Error", Message = ex.Message });
+        }
         catch (Exception ex)
         {
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;

@@ -77,7 +77,9 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     {
         var userId = (Guid)HttpContext.Items["UserId"];
         var userRoles = (List<RoleDto>)HttpContext.Items["Roles"];
-        return Ok(await loanService.GetLoan(id, userId, userRoles));
+        var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+
+        return Ok(await loanService.GetLoan(id, userId, userRoles, token));
     }
     
     /// <response code="200">Часть кредита оплачена</response>

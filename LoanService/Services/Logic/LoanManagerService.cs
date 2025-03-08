@@ -1,4 +1,6 @@
-﻿using LoanService.Database;
+﻿using System.Net.Http.Headers;
+using System.Text.Json;
+using LoanService.Database;
 using LoanService.Database.TableModels;
 using LoanService.Exceptions;
 using LoanService.Middleware;
@@ -6,12 +8,16 @@ using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
+using Microsoft.AspNetCore.Connections;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
 
-public class LoanManagerService(AppDbContext dbContext) : ILoanManagerService
+public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration) : ILoanManagerService
 {
+    private readonly string? _backendIp = configuration["Backend:VpaIp"];
+    
     public async Task<LoanPreviewDto> CalculateLoan(double givenMoney, int termDays, Guid rateId)
     {
         var rate = await dbContext.Rates
@@ -78,7 +84,7 @@ public class LoanManagerService(AppDbContext dbContext) : ILoanManagerService
         return loan.Id;
     }
 
-    public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles)
+    public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token)
     {
         var loan = await dbContext.Loans
             .Include(l => l.Rate)
@@ -99,9 +105,33 @@ public class LoanManagerService(AppDbContext dbContext) : ILoanManagerService
         
         var dailyPayment = CalculateDailyPayment(loan.Rate.RateValue, loan.GivenMoney, termDays);
         
-        //получить список транзакций по кредиту
-        var transactions = new List<TransactionDto>();
+        var payedPaymentsCount = loan.Payments
+            .Count(p => p.Status == PaymentStatus.Payed);
+        
+        var totalMoneyToPay = dailyPayment * termDays;
+        var moneyLeftToPay = totalMoneyToPay - dailyPayment * payedPaymentsCount;
+        
+        var baseUrl = $"http://{_backendIp}:5001/core/transaction";
+        var queryParams = new Dictionary<string, string?>();
+        foreach (var transactionId in loan.Transactions)
+        {
+            queryParams.Add("Transactions", transactionId.ToString());
+        }
+        var fullUrl = QueryHelpers.AddQueryString(baseUrl, queryParams);
+        
+        HttpClient client = new();
+        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        
+        var transactionsResponse = await client.GetAsync(fullUrl);
 
+        if (!transactionsResponse.IsSuccessStatusCode)
+        {
+            throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
+        }
+        
+        var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
+        var transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+        
         return new LoanDetailDto
         {
             Id = id,
@@ -117,8 +147,8 @@ public class LoanManagerService(AppDbContext dbContext) : ILoanManagerService
             GivenMoney = loan.GivenMoney,
             Status = loan.Status,
             Transactions = transactions,
-            TotalMoneyToPay = dailyPayment * termDays,
-            MoneyLeftToPay = 0, //надо посчитать
+            TotalMoneyToPay = totalMoneyToPay,
+            MoneyLeftToPay = moneyLeftToPay,
             DailyPayment = dailyPayment,
             TermDays = termDays,
             Payments = loan.Payments
