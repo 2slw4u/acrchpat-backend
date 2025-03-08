@@ -1,5 +1,6 @@
 using System.Text;
 using LoanService.Database;
+using LoanService.Integrations;
 using LoanService.Middleware;
 using LoanService.Services.Interfaces;
 using LoanService.Services.Logic;
@@ -81,6 +82,7 @@ if (!builder.Environment.IsDevelopment())
 
 builder.Services.AddScoped<IRateService, RateService>();
 builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
+builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
 
 var app = builder.Build();
 
