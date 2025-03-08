@@ -9,7 +9,7 @@ public interface ILoanManagerService
 
     Task<Guid> CreateLoan(Guid userId, LoanCreateModel model);
 
-    Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles);
+    Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token);
 
     Task<int> PayLoan(Guid userId, Guid loanId, Guid? paymentId);
 
