@@ -9,11 +9,8 @@ namespace CoreService.Models.Exceptions
         public ExceptionToResponseProxy() : base("Внутренняя ошибка сервиса") {
             this.StatusCode = HttpStatusCode.InternalServerError;
         }
-        public ExceptionToResponseProxy(string message, bool useDefaultCode = true) : base(message) {
-            if (!useDefaultCode)
-            {
-                this.StatusCode = HttpStatusCode.InternalServerError;
-            }
+        public ExceptionToResponseProxy(string message, HttpStatusCode statusCode = HttpStatusCode.InternalServerError) : base(message) {
+            this.StatusCode = statusCode;
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿namespace CoreService.Models.Exceptions
+﻿using System.Net;
+
+namespace CoreService.Models.Exceptions
 {
     public class NotEnoughMoney : ExceptionToResponseProxy
     {
-        public NotEnoughMoney() : base("На счете недостаточно денег для списания", false)
-        {
-            this.StatusCode = System.Net.HttpStatusCode.UnprocessableEntity;
-        }
+        public NotEnoughMoney() : base("На счете недостаточно денег для списания", HttpStatusCode.UnprocessableEntity) { }
     }
 }

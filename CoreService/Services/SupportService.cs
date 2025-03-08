@@ -23,12 +23,12 @@ namespace CoreService.Services
 
         public async Task ChangeClientAccountStatus(HttpContext httpContext, ChangeClientAccountStatusRequest request)
         {
-            throw new OperationNotImplemented();
+            throw new OperationNotNeeded();
         }
 
         public async Task<GetClientAccountDetailsResponse> GetClientAccountDetails(HttpContext httpContext, GetClientAccountDetailsRequest request)
         {
-            throw new OperationNotImplemented();
+            throw new OperationNotNeeded();
         }
 
         public async Task<GetClientAccountsResponse> GetClientAccounts(HttpContext httpContext, GetClientAccountsRequest request)

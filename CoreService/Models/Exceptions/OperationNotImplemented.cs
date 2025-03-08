@@ -1,10 +1,9 @@
-﻿namespace CoreService.Models.Exceptions
+﻿using System.Net;
+
+namespace CoreService.Models.Exceptions
 {
     public class OperationNotImplemented : ExceptionToResponseProxy
     {
-        public OperationNotImplemented() : base("Данная операция ещё не внедрена", false)
-        {
-            this.StatusCode = System.Net.HttpStatusCode.NotImplemented;
-        }
+        public OperationNotImplemented() : base("Данная операция ещё не внедрена", HttpStatusCode.NotImplemented) { }
     }
 }

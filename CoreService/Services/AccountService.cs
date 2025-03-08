@@ -49,7 +49,7 @@ namespace CoreService.Services
 
         public async Task<GetAccountDetailsResponse> GetAccountDetails(HttpContext httpContext, GetAccountDetailsRequest request)
         {
-            throw new OperationNotImplemented();
+            throw new OperationNotNeeded();
             /*var account = new AccountDTO
             {
                 Id = request.accountId,

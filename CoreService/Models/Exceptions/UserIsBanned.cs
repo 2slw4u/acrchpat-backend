@@ -1,10 +1,9 @@
-﻿namespace CoreService.Models.Exceptions
+﻿using System.Net;
+
+namespace CoreService.Models.Exceptions
 {
     public class UserIsBanned : ExceptionToResponseProxy
     {
-        public UserIsBanned() : base("Пользователь забанен", false)
-        {
-            this.StatusCode = System.Net.HttpStatusCode.Forbidden;
-        }
+        public UserIsBanned() : base("Пользователь забанен", HttpStatusCode.Forbidden) { }
     }
 }
