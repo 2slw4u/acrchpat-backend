@@ -2,6 +2,7 @@
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Exceptions;
 using CoreService.Models.Request.Account;
 using CoreService.Models.Response.Account;
 using CoreService.Services.Interfaces;
@@ -28,7 +29,7 @@ namespace CoreService.Services
         }
         public async Task ChangeAccountDetails(HttpContext httpContext, ChangeAccountDetailsRequest request)
         {
-            throw new NotImplementedException();
+            throw new OperationNotImplemented();
         }
 
         public async Task CloseAccount(HttpContext httpContext, CloseAccountRequest request)
@@ -36,11 +37,11 @@ namespace CoreService.Services
             var account = await _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefaultAsync();
             if (account == null)
             {
-                throw new BadHttpRequestException("Account is not found", 404);
+                throw new AccountNotFound();
             }
             else if (account.Status == Models.Enum.AccountStatus.Closed)
             {
-                throw new BadHttpRequestException("Account is already closed", 422);
+                throw new AccountIsClosed();
             }
             account.Status = Models.Enum.AccountStatus.Closed;
             await _dbContext.SaveChangesAsync();
@@ -48,7 +49,8 @@ namespace CoreService.Services
 
         public async Task<GetAccountDetailsResponse> GetAccountDetails(HttpContext httpContext, GetAccountDetailsRequest request)
         {
-            var account = new AccountDTO
+            throw new OperationNotNeeded();
+            /*var account = new AccountDTO
             {
                 Id = request.accountId,
                 Status = Models.Enum.AccountStatus.Opened,
@@ -70,7 +72,7 @@ namespace CoreService.Services
                     AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(20)
                 });
                 throw new NotImplementedException();
-            }
+            }*/
         }
 
         public async Task<GetAccountsResponse> GetAccounts(HttpContext httpContext, GetAccountsRequest request)

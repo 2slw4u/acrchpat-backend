@@ -2,6 +2,7 @@
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Exceptions;
 using CoreService.Models.Request.Transaction;
 using CoreService.Models.Response.Transaction;
 using CoreService.Services.Interfaces;
@@ -25,11 +26,11 @@ namespace CoreService.Services
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
             if (account == null)
             {
-                throw new KeyNotFoundException();
+                throw new AccountNotFound();
             }
             else if (account.Status == Models.Enum.AccountStatus.Closed)
             {
-                throw new BadHttpRequestException("Account should not be closed", 422);
+                throw new AccountIsClosed();
             }
             account.Balance += request.Deposit.Amount;
             var transaction = _mapper.Map<TransactionEntity>(request);
@@ -58,11 +59,11 @@ namespace CoreService.Services
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
             if (account == null)
             {
-                throw new KeyNotFoundException();
+                throw new AccountNotFound();
             }
             else if (account.Status == Models.Enum.AccountStatus.Closed)
             {
-                throw new BadHttpRequestException("Account should not be closed", 422);
+                throw new NotEnoughMoney();
             }
             else if (account.Balance < request.Withdrawal.Amount)
             {
