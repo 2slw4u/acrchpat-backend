@@ -11,11 +11,12 @@ public class RabbitMqService : IRabbitMqService, IDisposable
     private IChannel? _channel;
     private readonly string _queueName = "TestQueue";
 
-    public RabbitMqService()
+    public RabbitMqService(IConfiguration configuration)
     {
+        string backendIp = configuration["Backend:VpaIp"];
         _connectionFactory = new ConnectionFactory()
         {
-            Uri = new Uri("amqp://guest:guest@localhost:5672")
+            Uri = new Uri($"amqp://guest:guest@{backendIp}:5672")
         };
         InitializeRabbitMq();
     }
