@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using UserService.Database;
 using UserService.Models.DTOs;
 using UserService.Models.Entities;
+using UserService.Models.Exceptions;
 using UserService.Services.Interfaces;
 
 namespace UserService.Services

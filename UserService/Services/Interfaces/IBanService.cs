@@ -5,7 +5,7 @@ namespace UserService.Services.Interfaces
 	public interface IBanService
 	{
 		Task<List<BanDto>> GetUserBanHistory(Guid id);
-		Task<Response> BanUser(Guid id);
-		Task<Response> UnbanUser(Guid id);
+		Task<ResponseDto> BanUser(Guid id);
+		Task<ResponseDto> UnbanUser(Guid id);
 	}
 }

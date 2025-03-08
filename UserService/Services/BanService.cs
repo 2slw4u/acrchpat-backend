@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using UserService.Database;
+using UserService.Integrations.AMQP.RabbitMQ.Producer;
 using UserService.Models.DTOs;
 using UserService.Models.Entities;
+using UserService.Models.Exceptions;
 using UserService.Services.Interfaces;
 
 namespace UserService.Services
@@ -10,13 +12,15 @@ namespace UserService.Services
 	{
 		private readonly AppDbContext _context;
 		private readonly IAuthenticationService _authenticationService;
+		private readonly IRabbitMqProducerService _rabbitMqProducerService;
 		private readonly ILogger<BanService> _logger;
 
-		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger)
+		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger, IRabbitMqProducerService rabbitMqProducerService)
 		{
 			_context = context;
 			_authenticationService = authenticationService;
 			_logger = logger;
+			_rabbitMqProducerService = rabbitMqProducerService;
 		}
 
 		public async Task<List<BanDto>> GetUserBanHistory(Guid id)
@@ -40,24 +44,29 @@ namespace UserService.Services
 			return result;
 		}
 
-		public async Task<Response> BanUser(Guid id)
+		public async Task<ResponseDto> BanUser(Guid id)
 		{
 			var currentUser = await _authenticationService.Authenticate();
 			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
 			{
-				throw new Exception("User isn't permitted to ban users");
+				throw new ForbiddenException("User isn't permitted to ban users");
 			}
 
-			var userToBan = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
+			var userToBan = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
 			if (userToBan == null)
 			{
-				throw new KeyNotFoundException("Invalid user to ban id");
+				throw new NotFoundException("Invalid user to ban id");
+			}
+
+			if (currentUser.Id == id)
+			{
+				throw new BadRequestException("Banning oneself is not permitted.");
 			}
 
 			bool isAlreadyBanned = await _context.Bans.AnyAsync(b => b.BannedUser.Id == id && b.BanEnd == null);
 			if (isAlreadyBanned)
 			{
-				throw new ArgumentException("User is banned");
+				throw new BadRequestException("User is already banned");
 			}
 
 			var ban = new BanEntity
@@ -72,26 +81,34 @@ namespace UserService.Services
 			_context.Bans.Add(ban);
 			await _context.SaveChangesAsync();
 
-			return new Response
+			var result = new ResponseDto
 			{
 				Status = "Success",
 				Message = "User banned successfully."
 			};
+			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(userToBan));
+			return result;
 		}
 
-		public async Task<Response> UnbanUser(Guid id)
+		public async Task<ResponseDto> UnbanUser(Guid id)
 		{
 			var currentUser = await _authenticationService.Authenticate();
 			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
 			{
-				throw new Exception("User isn't permitted to ban users");
+				throw new ForbiddenException("User isn't permitted to ban users");
 			}
 
 			var userToBan = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
 			if (userToBan == null)
 			{
-				throw new KeyNotFoundException("Invalid user to unban id");
+				throw new NotFoundException("Invalid user to unban id");
 			}
+
+			if (currentUser.Id == id)
+			{
+				throw new BadRequestException("Unbanning oneself is not permitted.");
+			}
+
 
 			var activeBan = await _context.Bans
 				.Where(b => b.BannedUser.Id == id && b.BanEnd == null)
@@ -99,17 +116,19 @@ namespace UserService.Services
 
 			if (activeBan == null)
 			{
-				throw new ArgumentException("User is not banned");
+				throw new BadRequestException("User is not banned");
 			}
 
 			activeBan.BanEnd = DateTime.UtcNow;
 			await _context.SaveChangesAsync();
 
-			return new Response
+			var result = new ResponseDto
 			{
 				Status = "Success",
 				Message = "User unbanned successfully."
 			};
+
+			return result;
 		}
 	}
 }
