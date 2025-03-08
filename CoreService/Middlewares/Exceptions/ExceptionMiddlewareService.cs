@@ -1,7 +1,8 @@
-﻿using CoreService.Models.Exceptions;
+﻿using CoreService.Helpers;
+using CoreService.Models.Exceptions;
 using Microsoft.AspNetCore.Http.HttpResults;
 
-namespace CoreService.Middlewares.ExceptionHandler
+namespace CoreService.Middlewares.Exceptions
 {
     public class ExceptionMiddlewareService
     {
@@ -18,13 +19,11 @@ namespace CoreService.Middlewares.ExceptionHandler
             }
             catch (ExceptionToResponseProxy ex)
             {
-                context.Response.StatusCode = (int)ex.StatusCode;
-                await context.Response.WriteAsJsonAsync(new { message = $"{(int)ex.StatusCode} {ex.StatusCode}: {ex.Message}" });
+                ExceptionHandler.HandleHttpException(context, ex);
             }
             catch (Exception ex)
             {
-                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-                await context.Response.WriteAsJsonAsync(new { message = $"500Internal Server Error. Someone somewhere did an oopsie: {ex.Message}" });
+                ExceptionHandler.HandleSystemException(context, ex);                
             }
         }
     }

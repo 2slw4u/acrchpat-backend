@@ -14,7 +14,7 @@ using Microsoft.Extensions.Caching.Memory;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
-namespace CoreService.Middlewares.ExceptionHandler
+namespace CoreService.Middlewares.Authorization
 {
     public class AuthorizationMiddlewareService
     {

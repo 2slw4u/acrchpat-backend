@@ -1,4 +1,6 @@
-﻿using CoreService.Models.Request.Transaction;
+﻿using CoreService.Attributes;
+using CoreService.Models.Enum;
+using CoreService.Models.Request.Transaction;
 using CoreService.Models.Response.Transaction;
 using CoreService.Services;
 using CoreService.Services.Interfaces;
@@ -21,16 +23,17 @@ namespace CoreService.Controllers
         [HttpGet]
         [EndpointSummary("(GetTransactionsHistory) Returns history of user transactions")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task<GetTransactionsHistoryResponse> GetTransactionsHistory(GetTransactionsHistoryRequest request)
         {
             return await _transactionService.GetTransactionsHistory(HttpContext, request);
         }
 
-
         [HttpPost]
         [Route("{accountId}/deposit")]
         [EndpointSummary("(DepositMoneyToAccount) Imitates depositing money from ATM")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task DepositMoneyToAccount(DepositMoneyToAccountRequest request)
         {
             await _transactionService.DepositMoneyToAccount(HttpContext, request);
@@ -40,6 +43,7 @@ namespace CoreService.Controllers
         [Route("{accountId}/withdrawal")]
         [EndpointSummary("(WithdrawMoneyFromAccount) Imitates wihdrawal money with ATM")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
         {
             await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);

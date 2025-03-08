@@ -1,4 +1,5 @@
-﻿using CoreService.Middlewares.ExceptionHandler;
+﻿using CoreService.Middlewares.Exceptions;
+using CoreService.Middlewares.Authorization;
 
 namespace CoreService.Middlewares
 {

@@ -1,4 +1,6 @@
+using CoreService.Attributes;
 using CoreService.Models.DTO;
+using CoreService.Models.Enum;
 using CoreService.Models.Request.Account;
 using CoreService.Models.Response.Account;
 using CoreService.Services.Interfaces;
@@ -24,6 +26,7 @@ namespace CoreService.Controllers
         [HttpGet]
         [EndpointSummary("(GetAccounts) Return all accounts owned by user")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task<GetAccountsResponse> GetAccounts()
         {
             return await _accountService.GetAccounts(HttpContext);
@@ -32,6 +35,7 @@ namespace CoreService.Controllers
         [HttpPost]
         [EndpointSummary("(OpenNewAccount) Opens new account for a given user")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task OpenNewAccount(OpenNewAccountRequest request)
         {
             await _accountService.OpenNewAccount(HttpContext, request);
@@ -43,6 +47,7 @@ namespace CoreService.Controllers
         [EndpointDescription("This one is fully optional and will likely not be implemented in MVP")]
         [Obsolete]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task<GetAccountDetailsResponse> GetAccountDetails(GetAccountDetailsRequest request)
         {
             return await _accountService.GetAccountDetails(HttpContext, request);
@@ -52,6 +57,7 @@ namespace CoreService.Controllers
         [Route("{accountId}")]
         [EndpointSummary("(CloseAccount) Closes account of a user")]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task CloseAccount(CloseAccountRequest request)
         {
             await _accountService.CloseAccount(HttpContext, request);
@@ -63,6 +69,7 @@ namespace CoreService.Controllers
         [EndpointDescription("This one is fully optional and will likely not be implemented in MVP")]
         [Obsolete]
         [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task ChangeAccountDetails(ChangeAccountDetailsRequest request)
         {
             await _accountService.ChangeAccountDetails(HttpContext, request);
