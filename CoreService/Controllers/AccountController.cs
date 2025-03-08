@@ -1,7 +1,10 @@
+using CoreService.Attributes;
 using CoreService.Models.DTO;
+using CoreService.Models.Enum;
 using CoreService.Models.Request.Account;
 using CoreService.Models.Response.Account;
 using CoreService.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
@@ -22,13 +25,17 @@ namespace CoreService.Controllers
         
         [HttpGet]
         [EndpointSummary("(GetAccounts) Return all accounts owned by user")]
-        public async Task<GetAccountsResponse> GetAccounts(GetAccountsRequest request)
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
+        public async Task<GetAccountsResponse> GetAccounts()
         {
-            return await _accountService.GetAccounts(HttpContext, request);
+            return await _accountService.GetAccounts(HttpContext);
         }
         
         [HttpPost]
         [EndpointSummary("(OpenNewAccount) Opens new account for a given user")]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task OpenNewAccount(OpenNewAccountRequest request)
         {
             await _accountService.OpenNewAccount(HttpContext, request);
@@ -39,6 +46,8 @@ namespace CoreService.Controllers
         [EndpointSummary("(GetAccountDetails) Returns a detailed representation of an account")]
         [EndpointDescription("This one is fully optional and will likely not be implemented in MVP")]
         [Obsolete]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task<GetAccountDetailsResponse> GetAccountDetails(GetAccountDetailsRequest request)
         {
             return await _accountService.GetAccountDetails(HttpContext, request);
@@ -47,6 +56,8 @@ namespace CoreService.Controllers
         [HttpDelete]
         [Route("{accountId}")]
         [EndpointSummary("(CloseAccount) Closes account of a user")]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task CloseAccount(CloseAccountRequest request)
         {
             await _accountService.CloseAccount(HttpContext, request);
@@ -57,6 +68,8 @@ namespace CoreService.Controllers
         [EndpointSummary("(ChangeAccountDetails) Changes account details")]
         [EndpointDescription("This one is fully optional and will likely not be implemented in MVP")]
         [Obsolete]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
         public async Task ChangeAccountDetails(ChangeAccountDetailsRequest request)
         {
             await _accountService.ChangeAccountDetails(HttpContext, request);

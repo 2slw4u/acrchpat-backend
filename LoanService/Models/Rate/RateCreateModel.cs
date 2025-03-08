@@ -11,5 +11,5 @@ public class RateCreateModel
     
     [Required]
     [Range(0.1, 100, ErrorMessage = "Значение должно быть в диапазоне от {1} до {2}.")]
-    public float Rate { get; set; }
+    public double TwelveDayRate { get; set; }
 }

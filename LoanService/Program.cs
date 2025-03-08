@@ -104,6 +104,7 @@ app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
+app.UseExceptionMiddleware();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
