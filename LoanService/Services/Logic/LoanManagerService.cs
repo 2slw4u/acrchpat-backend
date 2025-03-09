@@ -257,7 +257,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         loan.Transactions.Add(transactionId);
 
-        if (paymentId != null)
+        if (paymentId != Guid.Empty)
         {
             var payment = loan.Payments
                 .FirstOrDefault(p => p.Id == paymentId);
