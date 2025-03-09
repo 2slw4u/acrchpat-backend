@@ -11,7 +11,7 @@ namespace CoreService.Models.DTO
         [Required]
         public Guid PaymentId { get; set; }
         [Required]
-        public string Type { get; set; }
+        public TransactionType Type { get; set; }
         [Required]
         public bool Status { get; set; }
         public string? ErrorMessage { get; set; }
