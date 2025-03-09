@@ -83,7 +83,8 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             LoanId = loan.Id,
             Amount = loan.GivenMoney,
             Type = TransactionType.LoanAccrual,
-            AccountId = model.AccountIdToReceiveMoney
+            AccountId = model.AccountIdToReceiveMoney,
+            UserId = userId
         });
         
         await dbContext.Loans.AddAsync(loan);
