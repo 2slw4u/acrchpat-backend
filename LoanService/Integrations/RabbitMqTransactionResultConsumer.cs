@@ -2,6 +2,7 @@
 using System.Text.Json;
 using LoanService.Models.General;
 using LoanService.Services.Interfaces;
+using Microsoft.Extensions.Logging.Configuration;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -10,7 +11,7 @@ namespace LoanService.Integrations;
 public class RabbitMqTransactionResultConsumer(
     IConfiguration configuration,
     ILogger<RabbitMqTransactionResultConsumer> logger,
-    ILoanManagerService loanService
+    IServiceProvider serviceProvider
     ) : BackgroundService
 {
     private string backendIp = configuration["Backend:VpaIp"];
@@ -19,6 +20,14 @@ public class RabbitMqTransactionResultConsumer(
     private IChannel? _channel;
     private AsyncEventingBasicConsumer? _consumer;
     private const string QueueName = "LoanConsumer";
+    
+    private async void InitializeTransactionResultExchange()
+    {
+        await _channel.ExchangeDeclareAsync(
+            exchange: TransactionResultExchange,
+            type: ExchangeType.Fanout
+        );
+    }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -59,6 +68,8 @@ public class RabbitMqTransactionResultConsumer(
             _connection = await factory.CreateConnectionAsync(cancellationToken);
             _channel = await _connection.CreateChannelAsync();
 
+            InitializeTransactionResultExchange();
+
             await _channel.QueueDeclareAsync(
                 queue: QueueName,
                 durable: false,
@@ -71,7 +82,8 @@ public class RabbitMqTransactionResultConsumer(
             await _channel.QueueBindAsync(
                 queue: QueueName,
                 exchange: TransactionResultExchange,
-                routingKey: string.Empty
+                routingKey: string.Empty,
+                cancellationToken: cancellationToken
             );
 
             logger.LogInformation("RabbitMQ connected and queue declared.");
@@ -90,26 +102,29 @@ public class RabbitMqTransactionResultConsumer(
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
             var result = JsonSerializer.Deserialize<TransactionResult>(message);
-
+            
             if (result != null)
             {
-                logger.LogInformation($"Received transaction request result for loan with ID {result.LoanId}," +
-                                      $" it is a {result.Status}. Transaction ID: {result.TransactionId}, payment ID:" +
-                                      $" {result.PaymentId} error message: {result.ErrorMessage}");
+                logger.LogInformation(message);
                 
-                if (result.Status == TransactionResultStatus.Success)
+                using (var scope = serviceProvider.CreateScope())
                 {
-                    await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
-                }
-                else
-                {
-                    if (result.Type == TransactionType.LoanPayment)
+                    var loanService = scope.ServiceProvider.GetRequiredService<ILoanManagerService>();
+            
+                    if (result.Status == TransactionResultStatus.Success)
                     {
-                        await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);
+                        await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
                     }
-                    else if (result.Type == TransactionType.LoanAccrual)
+                    else
                     {
-                        await loanService.DeleteInvalidLoan(result.LoanId);
+                        if (result.Type == TransactionType.LoanPayment)
+                        {
+                            await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);
+                        }
+                        else if (result.Type == TransactionType.LoanAccrual)
+                        {
+                            await loanService.DeleteInvalidLoan(result.LoanId);
+                        }
                     }
                 }
             }
