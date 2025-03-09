@@ -9,6 +9,11 @@ services:
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   postgres-core:
     image: postgres:17
@@ -22,6 +27,11 @@ services:
       - "5433:5432"
     volumes:
       - postgres_core_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "coreuser"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   postgres-loan:
     image: postgres:17
@@ -35,6 +45,11 @@ services:
       - "5434:5432"
     volumes:
       - postgres_loan_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "loanuser"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   postgres-user:
     image: postgres:17
@@ -48,13 +63,21 @@ services:
       - "5435:5432"
     volumes:
       - postgres_user_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "useruser"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
 
   coreservice:
     build:
       context: ./CoreService
     depends_on:
-      - postgres-core
-      - rabbitmq
+      postgres-core:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+
     ports:
       - "5001:80"
     environment:
@@ -65,8 +88,10 @@ services:
     build:
       context: ./LoanService
     depends_on:
-      - postgres-loan
-      - rabbitmq
+      postgres-loan:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "5002:80"
     environment:
@@ -77,8 +102,10 @@ services:
     build:
       context: ./UserService
     depends_on:
-      - postgres-user
-      - rabbitmq
+      postgres-user:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
     ports:
       - "5003:80"
     environment:
