@@ -158,18 +158,21 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 {
                     _logger.LogInformation(message);
 
-                    await this.ValidateTransactionRequest(request);
-                    var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : request.AccountId;
-                    if (suitableAccountId == null)
+                    if (await this.ValidateTransactionRequest(request))
                     {
-                        await this.SendResult(request, "Не нашлось подходящего счета");
+                        var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : request.AccountId;
+                        if (suitableAccountId == null)
+                        {
+                            await this.SendResult(request, "Не нашлось подходящего счета");
+                        }
+                        else
+                        {
+                            request.AccountId = suitableAccountId;
+                            await this.ChangeBalance(request);
+                            await this.SendResult(request);
+                        }
                     }
-                    else
-                    {
-                        request.AccountId = suitableAccountId;
-                        await this.ChangeBalance(request);
-                        await this.SendResult(request);
-                    }
+                    
                 }
                 if (_channel != null)
                 {
