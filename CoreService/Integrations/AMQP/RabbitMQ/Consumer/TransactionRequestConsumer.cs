@@ -101,6 +101,8 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 if (errorMessage != null)
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+                    var account = dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefault();
+                    transaction.Account = account;
                     await dbContext.Transactions.AddAsync(transaction);
                     await dbContext.SaveChangesAsync();
                 }
