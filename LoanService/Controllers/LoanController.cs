@@ -92,16 +92,16 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     [EndpointSummary("Оплатить часть кредита")]
     [Authorize]
     [RoleAuthorize("Client")]
-    [ProducesResponseType(typeof(int), 200)]
+    [ProducesResponseType(typeof(string), 200)]
     [ProducesResponseType(typeof(ResponseModel), 400)]
     [ProducesResponseType(typeof(ResponseModel), 401)]
     [ProducesResponseType(typeof(ResponseModel), 403)]
     [ProducesResponseType(typeof(ResponseModel), 404)]
     [ProducesResponseType(typeof(ResponseModel), 500)]
-    public async Task<IActionResult> PayLoan(Guid id, [FromQuery] Guid? paymentId)
+    public async Task<IActionResult> PayLoan(Guid id, [FromQuery] Guid? paymentId, [FromQuery] Guid? accountId)
     {
         var userId = (Guid)HttpContext.Items["UserId"];
-        return Ok(await loanService.PayLoan(userId, id, paymentId));
+        return Ok(await loanService.PayLoan(userId, id, paymentId, accountId));
     }
     
     /// <response code="200">Часть кредита оплачена</response>

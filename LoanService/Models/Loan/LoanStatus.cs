@@ -6,5 +6,6 @@ namespace LoanService.Models.Loan;
 public enum LoanStatus
 {
     Open,
-    Closed
+    Closed,
+    Overdue
 }

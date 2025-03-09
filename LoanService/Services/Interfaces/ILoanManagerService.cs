@@ -11,7 +11,13 @@ public interface ILoanManagerService
 
     Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token);
 
-    Task<int> PayLoan(Guid userId, Guid loanId, Guid? paymentId);
+    Task<string> PayLoan(Guid userId, Guid loanId, Guid? paymentId, Guid? accountId);
 
     Task<List<LoanShortDto>> GetLoanHistory(Guid userId);
+
+    Task AddTransaction(Guid loanId, Guid transactionId, Guid? paymentId);
+
+    Task MarkPaymentAsOverdue(Guid loanId, Guid paymentId);
+
+    Task DeleteInvalidLoan(Guid loanId);
 }
