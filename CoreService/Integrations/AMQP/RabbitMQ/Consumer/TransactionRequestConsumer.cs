@@ -16,9 +16,10 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 {
     public class TransactionRequestConsumer : RabbitMqConsumer
     {
-        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider)
+        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider, ILogger<TransactionRequestConsumer> logger)
             : base(configuration: configuration,
                   serviceProvider: serviceProvider,
+                  logger,
                   exchange: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Name"],
                   queue: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Queues:CoreService"])
         { }
@@ -113,6 +114,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     Successful = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
+                _logger.LogInformation($"Sent result: {response}");
                 await rabbitProducer.SendTransactionResultMessage(response);
             }
         }
@@ -144,7 +146,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 if (request != null)
                 {
-                    Console.WriteLine(message);
+                    _logger.LogInformation(message);
 
                     await this.ValidateTransactionRequest(request);
                     var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : null;
@@ -166,7 +168,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing message: {ex.Message}");
+                _logger.LogError($"Error processing message: {ex.Message}");
             }
         }
     }
