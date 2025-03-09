@@ -28,7 +28,7 @@ services:
     volumes:
       - postgres_core_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "coreuser"]
+      test: ["CMD", "pg_isready", "-U", "coredb"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -46,7 +46,7 @@ services:
     volumes:
       - postgres_loan_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "loanuser"]
+      test: ["CMD", "pg_isready", "-U", "loandb"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -64,7 +64,7 @@ services:
     volumes:
       - postgres_user_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD", "pg_isready", "-U", "useruser"]
+      test: ["CMD", "pg_isready", "-U", "userdb"]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -77,7 +77,6 @@ services:
         condition: service_healthy
       rabbitmq:
         condition: service_healthy
-
     ports:
       - "5001:80"
     environment:
