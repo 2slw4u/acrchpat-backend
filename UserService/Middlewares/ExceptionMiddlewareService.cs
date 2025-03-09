@@ -37,12 +37,12 @@ namespace UserService.Middlewares
 				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
 				await context.Response.WriteAsJsonAsync(new { message = "401 Unauthorized: " + ex.Message });
 			}
-			catch (Exception ex)
-			{
-				context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-				_logger.LogError(ex.Message);
-				await context.Response.WriteAsJsonAsync(new { message = "500 Internal Server Error:" + ex.Message });
-			}
+			//catch (Exception ex)
+			//{
+			//	context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+			//	_logger.LogError(ex.Message);
+			//	await context.Response.WriteAsJsonAsync(new { message = "500 Internal Server Error:" + ex.Message });
+			//}
 		}
 	}
 }

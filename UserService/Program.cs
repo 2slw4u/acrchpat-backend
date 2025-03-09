@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using UserService.Database;
+using UserService.Integrations.AMQP.RabbitMQ.Producer;
 using UserService.Middlewares;
 using UserService.Models.Entities;
 using UserService.Services;
@@ -99,7 +100,7 @@ builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<IBanService, BanService>();
-//builder.Services.AddSingleton<AuthenticationServiceFactory>();
+builder.Services.AddSingleton<IRabbitMqProducerService, RabbitMqProducerService>();
 
 var app = builder.Build();
 
@@ -121,6 +122,7 @@ app.UseHttpsRedirection();
 
 app.UseExceptionMiddleware();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();

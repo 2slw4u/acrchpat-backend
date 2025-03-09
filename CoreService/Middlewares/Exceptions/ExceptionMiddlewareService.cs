@@ -1,5 +1,7 @@
 ﻿using CoreService.Helpers;
 using CoreService.Models.Exceptions;
+using Microsoft.AspNetCore.Http.HttpResults;
+using CoreService.Helpers;
 
 namespace CoreService.Middlewares.Exceptions
 {

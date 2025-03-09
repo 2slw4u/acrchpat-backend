@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using UserService.Models.DTOs;
 using UserService.Services.Interfaces;
 
 namespace UserService.Controllers
@@ -22,6 +23,8 @@ namespace UserService.Controllers
 		/// <param name="userId">Идентификатор пользователя</param>
 		/// <returns>Список банов</returns>
 		[HttpGet("history/{userId}")]
+		[Authorize]
+		[ProducesResponseType(typeof(List<BanDto>), 200)]
 		public async Task<IActionResult> GetUserBanHistory(Guid userId)
 		{
 			var history = await _banService.GetUserBanHistory(userId);
@@ -34,6 +37,8 @@ namespace UserService.Controllers
 		/// <param name="userId">Идентификатор пользователя для бана</param>
 		/// <returns>Результат операции</returns>
 		[HttpPost("ban/{userId}")]
+		[Authorize]
+		[ProducesResponseType(typeof(ResponseDto), 200)]
 		public async Task<IActionResult> BanUser(Guid userId)
 		{
 			var result = await _banService.BanUser(userId);
@@ -47,6 +52,8 @@ namespace UserService.Controllers
 		/// <param name="userId">Идентификатор пользователя для разбана</param>
 		/// <returns>Результат операции</returns>
 		[HttpPost("unban/{userId}")]
+		[Authorize]
+		[ProducesResponseType(typeof(ResponseDto), 200)]
 		public async Task<IActionResult> UnbanUser(Guid userId)
 		{
 			var result = await _banService.UnbanUser(userId);
