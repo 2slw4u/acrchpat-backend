@@ -8,7 +8,7 @@ public class TransactionResult
     
     public Guid PaymentId { get; set; }
     
-    public TransactionResultStatus Status { get; set; }
+    public bool Status { get; set; }
     
     public TransactionType Type { get; set; }
     
