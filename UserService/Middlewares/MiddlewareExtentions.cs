@@ -1,5 +1,5 @@
 ﻿using UserService.Middlewares.Authorization;
-using UserService.Middlewares.Exception;
+using UserService.Middlewares.Exceptions;
 
 namespace UserService.Middlewares
 {
