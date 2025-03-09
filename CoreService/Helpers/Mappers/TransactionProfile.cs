@@ -2,7 +2,7 @@
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Transaction;
+using CoreService.Models.Http.Request.Transaction;
 
 namespace CoreService.Helpers.Mappers
 {

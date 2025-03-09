@@ -5,9 +5,11 @@ namespace CoreService.Helpers
 {
     public static class ContextDataHelper
     {
+        private const string userIdPath = "UserId";
+        private const string userRolesPath = "UserRoles";
         public static Guid GetUserId(HttpContext httpContext)
         {
-            var userId = httpContext.Items["UserId"] == null ? Guid.Empty : (Guid)httpContext.Items["UserId"];
+            var userId = httpContext.Items[userIdPath] == null ? Guid.Empty : (Guid)httpContext.Items[userIdPath];
             if (userId == Guid.Empty)
             {
                 throw new DataInContextNotFound();
@@ -19,25 +21,25 @@ namespace CoreService.Helpers
         {
             if (userId != null)
             {
-                httpContext.Items["UserId"] = userId;
+                httpContext.Items[userIdPath] = userId;
             }
         }
 
         public static List<UserRoleDTO> GetUserRoles(HttpContext httpContext)
         {
-            var userId = httpContext.Items["UserRoles"] == null ? null : (List<UserRoleDTO>)httpContext.Items["UserRoles"];
-            if (userId == null)
+            var userRoles = httpContext.Items[userRolesPath] == null ? null : (List<UserRoleDTO>)httpContext.Items[userRolesPath];
+            if (userRoles == null)
             {
                 throw new DataInContextNotFound();
             }
-            return userId;
+            return userRoles;
         }
 
         public static void SetUserRoles(HttpContext httpContext,  List<UserRoleDTO>? userRoles)
         {
             if (userRoles != null)
             {
-                httpContext.Items["UserRoles"] = userRoles;
+                httpContext.Items[userRolesPath] = userRoles;
             }
         }
     }

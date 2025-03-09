@@ -1,8 +1,8 @@
 using CoreService.Attributes;
 using CoreService.Models.DTO;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Account;
-using CoreService.Models.Response.Account;
+using CoreService.Models.Http.Request.Account;
+using CoreService.Models.Http.Response.Account;
 using CoreService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
@@ -36,9 +36,9 @@ namespace CoreService.Controllers
         [EndpointSummary("(OpenNewAccount) Opens new account for a given user")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task OpenNewAccount(OpenNewAccountRequest request)
+        public async Task<OpenNewAccountResponse> OpenNewAccount(OpenNewAccountRequest request)
         {
-            await _accountService.OpenNewAccount(HttpContext, request);
+            return await _accountService.OpenNewAccount(HttpContext, request);
         }
 
         [HttpGet]

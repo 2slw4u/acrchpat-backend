@@ -3,14 +3,8 @@ using CoreService.Helpers;
 using CoreService.Helpers.Cache;
 using CoreService.Integrations.Http.UserService;
 using CoreService.Models.Cache;
-using CoreService.Models.Database.Entity;
-using CoreService.Models.DTO;
 using CoreService.Models.Exceptions;
-using CoreService.Models.Request.Account;
-using CoreService.Models.Request.User;
-using CoreService.Models.Response.User;
-using Microsoft.AspNetCore.Http.HttpResults;
-using Microsoft.Extensions.Caching.Memory;
+using CoreService.Models.Http.Request.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -32,16 +26,15 @@ namespace CoreService.Middlewares.Authorization
             _userService = userService;
             _mapper = mapper;
         }
-        private string ExtractUserPhone(string token)
+        private string ExtractUserLogin(string token)
         {
             var decipheredToken = new JwtSecurityToken(token);
-            var phone = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault();
-            if (phone == null)
+            var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault();
+            if (login == null)
             {
                 throw new TokenClaimsUnprocessable();
             }
-            Console.WriteLine(phone.ToString());
-            return phone.ToString();
+            return login.ToString();
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
@@ -49,8 +42,8 @@ namespace CoreService.Middlewares.Authorization
             if (httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
             {
                 string token = authHeader.ToString().Replace("Bearer ", "");
-                var phone = this.ExtractUserPhone(token);
-                var userParameters = _cache.GetUserParametersFromCache(phone);
+                var login = this.ExtractUserLogin(token);
+                var userParameters = _cache.GetUserParametersFromCache(login);
                 if (userParameters == null)
                 {
                     var getCurrentClientResponse = await _userService.GetCurrentUser(httpContext, new GetCurrentUserRequest
@@ -58,7 +51,7 @@ namespace CoreService.Middlewares.Authorization
                         BearerToken = token
                     });
                     userParameters = _mapper.Map<UserParametersCacheEntry>(getCurrentClientResponse);
-                    _cache.InsertUserParametersIntoCache(phone, userParameters);
+                    _cache.InsertUserParametersIntoCache(login, userParameters);
                 }
                 if (userParameters.IsBanned)
                 {

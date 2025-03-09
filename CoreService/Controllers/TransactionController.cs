@@ -1,7 +1,7 @@
 ﻿using CoreService.Attributes;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Transaction;
-using CoreService.Models.Response.Transaction;
+using CoreService.Models.Http.Request.Transaction;
+using CoreService.Models.Http.Response.Transaction;
 using CoreService.Services;
 using CoreService.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;

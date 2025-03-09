@@ -3,9 +3,10 @@ using CoreService.Helpers;
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Enum;
 using CoreService.Models.Exceptions;
-using CoreService.Models.Request.Transaction;
-using CoreService.Models.Response.Transaction;
+using CoreService.Models.Http.Request.Transaction;
+using CoreService.Models.Http.Response.Transaction;
 using CoreService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -42,6 +43,7 @@ namespace CoreService.Services
             var transaction = _mapper.Map<TransactionEntity>(request);
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
+            
             await _dbContext.SaveChangesAsync();
         }
 
@@ -65,7 +67,7 @@ namespace CoreService.Services
             }
             return new GetTransactionsDataResponse
             {
-                Transactions = transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
+                Transactions = await transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToListAsync()
             };
         }
 
