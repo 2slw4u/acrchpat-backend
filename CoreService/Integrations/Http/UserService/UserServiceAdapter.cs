@@ -27,7 +27,12 @@ namespace CoreService.Integrations.Http.UserService
 
                 if (authResponse.StatusCode == HttpStatusCode.Forbidden)
                 {
-                    return new GetCurrentUserResponse { IsBanned = true };
+                    return new GetCurrentUserResponse {
+                        Id = Guid.Empty,
+                        Email = null,
+                        IsBanned = true,
+                        Roles = null
+                    };
                 }
                 if (!authResponse.IsSuccessStatusCode)
                 {

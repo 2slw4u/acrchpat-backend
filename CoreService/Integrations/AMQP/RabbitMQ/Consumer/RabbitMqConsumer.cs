@@ -8,21 +8,31 @@ using System.Threading;
 
 namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 {
-    public abstract class RabbitMqConsumer(IConfiguration configuration,
-        IServiceProvider serviceProvider) : BackgroundService
+    public abstract class RabbitMqConsumer : BackgroundService
     {
         protected IConnection? _connection;
         protected IChannel? _channel;
         private AsyncEventingBasicConsumer? _consumer;
-        private string _connectionUri = configuration["Integrations:AMQP:Rabbit:Connection"];
-        protected string _queue;
-        protected string _exchange;
+        protected IServiceProvider _serviceProvider;
+        private string _connectionUri;
+        private string _queue;
+        private string _exchange;
+
+        public RabbitMqConsumer(IConfiguration configuration,
+            IServiceProvider serviceProvider, string exchange, string queue)
+        {
+            _serviceProvider = serviceProvider;
+            _connectionUri = configuration["Integrations:AMQP:Rabbit:Connection"];
+            _queue = queue;
+            _exchange = exchange;
+        }
 
         private async Task InitializeExchange()
         {
             await _channel.ExchangeDeclareAsync(
                 exchange: _exchange,
-                type: ExchangeType.Fanout
+                type: ExchangeType.Fanout,
+                durable: true
             );
         }
 
@@ -30,7 +40,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
         {
             await _channel.QueueDeclareAsync(
                     queue: _queue,
-                    durable: false,
+                    durable: true,
                     exclusive: false,
                     autoDelete: false,
                     arguments: null,

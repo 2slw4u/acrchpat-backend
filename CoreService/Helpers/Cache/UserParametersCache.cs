@@ -11,20 +11,21 @@ namespace CoreService.Helpers.Cache
         {
             _memoryCache = memoryCache;
             this._cacheOptions = new MemoryCacheEntryOptions{
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(2)
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromSeconds(15)
             };
         }
         public UserParametersCacheEntry? GetUserParametersFromCache(string userLogin)
         {
             _memoryCache.TryGetValue<UserParametersCacheEntry>(userLogin, out UserParametersCacheEntry? result);
+            Console.WriteLine($"Trying to find user in cache: {userLogin}");
             if (result == null)
             {
                 Console.WriteLine("Entry in cache not found");
             }
             else
             {
-                Console.WriteLine($"Found entry in cache: {result.Id}, banned: {result.IsBanned}, role: {result.Roles[0].Id} + {result.Roles[0].Name}");
-                this.InsertUserParametersIntoCache(userLogin, result);
+                Console.WriteLine($"Found entry in cache: {result.Id}, banned: {result.IsBanned}, role: {result.Roles}");
+                //this.InsertUserParametersIntoCache(userLogin, result);
             }
             return result;
         }

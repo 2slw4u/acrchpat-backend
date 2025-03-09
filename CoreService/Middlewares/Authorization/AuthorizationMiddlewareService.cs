@@ -29,7 +29,9 @@ namespace CoreService.Middlewares.Authorization
         private string ExtractUserLogin(string token)
         {
             var decipheredToken = new JwtSecurityToken(token);
-            var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault();
+            var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault().ToString();
+            login = login.Replace("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone: ", "");
+            Console.WriteLine($"phone in claims: {login}");
             if (login == null)
             {
                 throw new TokenClaimsUnprocessable();

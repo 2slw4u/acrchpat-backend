@@ -11,11 +11,14 @@ using AutoMapper;
 
 namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 {
-    public class UserBansConsumer (IConfiguration configuration,
-        IServiceProvider serviceProvider) : RabbitMqConsumer
+    public class UserBansConsumer : RabbitMqConsumer
     {
-        protected string _queue = configuration["Integrations:AMQP:Rabbit:Exchange:UserBansExchange:Queues:CoreService"];
-        protected string _exchange = configuration["Integrations:AMQP:Rabbit:Exchange:UserBansExchange:Name"];
+        public UserBansConsumer(IConfiguration configuration, IServiceProvider serviceProvider)
+            : base(configuration: configuration,
+                  serviceProvider: serviceProvider, 
+                  exchange: configuration["Integrations:AMQP:Rabbit:Exchanges:UserBansExchange:Name"],
+                  queue: configuration["Integrations:AMQP:Rabbit:Exchanges:UserBansExchange:Queues:CoreService"])
+        { }
         protected override async Task HandleMessageAsync(object sender, BasicDeliverEventArgs ea)
         {
             try
@@ -28,7 +31,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 {
                     Console.WriteLine(message);
 
-                    using (var scope = serviceProvider.CreateScope())
+                    using (var scope = _serviceProvider.CreateScope())
                     {
                         var userCache = scope.ServiceProvider.GetRequiredService<IUserParametersCache>();
                         var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
@@ -36,7 +39,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                         userCache.InsertUserParametersIntoCache(
                             userLogin: result.Phone,
                             userParameters: mapper.Map<UserParametersCacheEntry>(result)
-                            );
+                        );
                     }
                 }
 
