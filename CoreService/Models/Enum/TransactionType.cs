@@ -7,12 +7,12 @@ namespace CoreService.Models.Enum
     public enum TransactionType
     {
         [Description("Withdrawal of funds through ATM")]
-        Deposit,
+        Deposit = 0,
         [Description("Deposit of funds through ATM")]
-        Withdrawal,
+        Withdrawal = 1,
         [Description("Money accrued from taking a loan")]
-        LoanAccrual,
+        LoanAccrual = 2,
         [Description("Payment for a taken loan")]
-        LoanPayment
+        LoanPayment = 3
     }
 }
