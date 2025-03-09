@@ -11,7 +11,6 @@ public class RabbitMqTransactionRequestProducer : IRabbitMqTransactionRequestPro
     private const string TransactionRequestExchange = "transaction.request";
     private IConnection? _connection;
     private IChannel? _channel;
-    private readonly string QueueName = "CoreConsumer";
 
     public RabbitMqTransactionRequestProducer(IConfiguration configuration)
     {
@@ -28,14 +27,6 @@ public class RabbitMqTransactionRequestProducer : IRabbitMqTransactionRequestPro
         _connection = await _connectionFactory.CreateConnectionAsync();
         _channel = await _connection.CreateChannelAsync();
         InitializeTransactionRequestExchange();
-        
-        // await _channel.QueueDeclareAsync(
-        //     queue: QueueName,
-        //     durable: false,
-        //     exclusive: false,
-        //     autoDelete: false,
-        //     arguments: null
-        // );
     }
     
     private async void InitializeTransactionRequestExchange()
