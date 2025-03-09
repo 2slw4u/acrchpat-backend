@@ -12,15 +12,17 @@ namespace UserService.Services
 	{
 		private readonly AppDbContext _context;
 		private readonly IAuthenticationService _authenticationService;
+		private readonly IUserManagingService _userManagingService;
 		private readonly IRabbitMqProducerService _rabbitMqProducerService;
 		private readonly ILogger<BanService> _logger;
 
-		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger, IRabbitMqProducerService rabbitMqProducerService)
+		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger, IRabbitMqProducerService rabbitMqProducerService, IUserManagingService userManagingService)
 		{
 			_context = context;
 			_authenticationService = authenticationService;
 			_logger = logger;
 			_rabbitMqProducerService = rabbitMqProducerService;
+			_userManagingService = userManagingService;
 		}
 
 		public async Task<List<BanDto>> GetUserBanHistory(Guid id)
@@ -46,17 +48,9 @@ namespace UserService.Services
 
 		public async Task<ResponseDto> BanUser(Guid id)
 		{
-			var currentUser = await _authenticationService.Authenticate();
-			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
-			{
-				throw new ForbiddenException("User isn't permitted to ban users");
-			}
+			var currentUser = await _authenticationService.GetCurrentUser();
 
-			var userToBan = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.Id == id);
-			if (userToBan == null)
-			{
-				throw new NotFoundException("Invalid user to ban id");
-			}
+			var userToBan = await _userManagingService.FullInfoById(id);
 
 			if (currentUser.Id == id)
 			{
@@ -81,34 +75,26 @@ namespace UserService.Services
 			_context.Bans.Add(ban);
 			await _context.SaveChangesAsync();
 
+			await SendUpdate(userToBan);
+
 			var result = new ResponseDto
 			{
 				Status = "Success",
 				Message = "User banned successfully."
 			};
-			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(userToBan));
 			return result;
 		}
 
 		public async Task<ResponseDto> UnbanUser(Guid id)
 		{
-			var currentUser = await _authenticationService.Authenticate();
-			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
-			{
-				throw new ForbiddenException("User isn't permitted to ban users");
-			}
+			var currentUser = await _authenticationService.GetCurrentUser();
 
-			var userToBan = await _context.Users.FirstOrDefaultAsync(u => u.Id == id);
-			if (userToBan == null)
-			{
-				throw new NotFoundException("Invalid user to unban id");
-			}
+			var userToUnban = await _userManagingService.FullInfoById(id);
 
 			if (currentUser.Id == id)
 			{
 				throw new BadRequestException("Unbanning oneself is not permitted.");
 			}
-
 
 			var activeBan = await _context.Bans
 				.Where(b => b.BannedUser.Id == id && b.BanEnd == null)
@@ -122,6 +108,8 @@ namespace UserService.Services
 			activeBan.BanEnd = DateTime.UtcNow;
 			await _context.SaveChangesAsync();
 
+			await SendUpdate(userToUnban);
+
 			var result = new ResponseDto
 			{
 				Status = "Success",
@@ -129,6 +117,11 @@ namespace UserService.Services
 			};
 
 			return result;
+		}
+
+		private async Task SendUpdate(UserEntity user)
+		{
+			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(user));
 		}
 	}
 }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using UserService.Models.DTOs;
 using UserService.Services.Interfaces;
 
@@ -25,7 +26,7 @@ namespace UserService.Controllers
 		}
 
 		[HttpPost]
-		[Authorize]
+		[Authorize(Roles = "Employee")]
 		[Route("create")]
 		[ProducesResponseType(typeof(UserDto), 200)]
 		public async Task<IActionResult> CreateUser([FromBody] UserCreateDto newUser)
@@ -54,6 +55,16 @@ namespace UserService.Controllers
 		}
 
 		[HttpGet]
+		[Route("user/{userId}")]
+		[Authorize]
+		[ProducesResponseType(typeof(UserDto), 200)]
+		public async Task<IActionResult> GetUserById(Guid userId)
+		{
+			var result = await _userService.GetUserById(userId);
+			return Ok(result);
+		}
+
+		[HttpGet]
 		[Route("all")]
 		[Authorize]
 		[ProducesResponseType(typeof(List<UserDto>), 200)]
@@ -65,17 +76,19 @@ namespace UserService.Controllers
 
 		[HttpPost]
 		[Route("{userId}/roles/add")]
+		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> AddRole(Guid userId, [FromQuery] Guid roleId )
+		public async Task<IActionResult> AddRole(Guid userId, [FromQuery][Required] Guid roleId )
 		{
 			var result = await _userService.AddRole(userId, roleId);
 			return Ok(result);
 		}
 
 		[HttpPost]
-		[Route("{userd}/roles/remove")]
+		[Authorize(Roles = "Employee")]
+		[Route("{userId}/roles/remove")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> RemoveRole(Guid userId, [FromQuery] Guid roleId)
+		public async Task<IActionResult> RemoveRole(Guid userId, [FromQuery][Required] Guid roleId)
 		{
 			var result = await _userService.RemoveRole(userId, roleId);
 			return Ok(result);
