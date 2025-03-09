@@ -109,11 +109,11 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 var response = new TransactionResultDTO
                 {
-                    Id = request.PaymentId,
-                    Amount = request.Amount,
+                    TransactionId = transaction.Id,
+                    PaymentId = request.PaymentId,
+                    LoanId = request.LoanId,
                     Type = request.Type,
-                    PerformedAt = errorMessage == null ? transaction.PerformedAt : DateTime.UtcNow,
-                    Successful = errorMessage == null ? true : false,
+                    Status = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
                 _logger.LogInformation($"Sent result: {response}");
