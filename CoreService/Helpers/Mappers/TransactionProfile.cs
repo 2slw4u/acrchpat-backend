@@ -87,10 +87,6 @@ namespace CoreService.Helpers.Mappers
                     opt => opt.MapFrom(src => Guid.NewGuid())
                 )
                 .ForMember(
-                    dest => dest.Account,
-                    opt => opt.MapFrom(src => src.AccountId)
-                )
-                .ForMember(
                     dest => dest.Amount,
                     opt => opt.MapFrom(src => src.Amount)
                 )
