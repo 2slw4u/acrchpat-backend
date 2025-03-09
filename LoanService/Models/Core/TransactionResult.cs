@@ -10,7 +10,7 @@ public class TransactionResult
     
     public bool Status { get; set; }
     
-    public TransactionType Type { get; set; }
+    public string Type { get; set; }
     
     public string? ErrorMessage { get; set; }
 }
