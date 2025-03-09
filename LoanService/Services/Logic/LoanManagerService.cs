@@ -141,6 +141,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             }
             
             var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
+            logger.LogInformation(responseBody);
             transactions = JsonSerializer.Deserialize<GetTransactionsDataResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }).Transactions;
         }
         
