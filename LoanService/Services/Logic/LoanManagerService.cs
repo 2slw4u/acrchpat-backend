@@ -37,7 +37,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         };
     }
 
-    public async Task<Guid> CreateLoan(Guid userId, LoanCreateModel model)
+    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles, string token)
     {
         var deadlineTime = DateTime.UtcNow.AddDays(model.TermDays);
         
@@ -86,8 +86,8 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         await dbContext.Loans.AddAsync(loan);
         await dbContext.SaveChangesAsync();
-
-        return loan.Id;
+        
+        return await GetLoan(loan.Id, userId, roles, token);
     }
 
     public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token)

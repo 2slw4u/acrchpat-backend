@@ -19,7 +19,7 @@ public class RabbitMqTransactionResultConsumer(
     private IConnection? _connection;
     private IChannel? _channel;
     private AsyncEventingBasicConsumer? _consumer;
-    private const string QueueName = "LoanConsumer";
+    private const string QueueName = "LoanServiceTransactionResultConsumer";
     
     private async void InitializeTransactionResultExchange()
     {
@@ -117,6 +117,7 @@ public class RabbitMqTransactionResultConsumer(
                     }
                     else
                     {
+                        logger.LogError($"Transaction error: {result.ErrorMessage}");
                         if (result.Type == TransactionType.LoanPayment)
                         {
                             await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);

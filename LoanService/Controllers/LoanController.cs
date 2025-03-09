@@ -46,7 +46,7 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     [EndpointSummary("Создать кредит")]
     [Authorize]
     [RoleAuthorize("Client")]
-    [ProducesResponseType(typeof(Guid), 200)]
+    [ProducesResponseType(typeof(LoanDetailDto), 200)]
     [ProducesResponseType(typeof(ResponseModel), 400)]
     [ProducesResponseType(typeof(ResponseModel), 401)]
     [ProducesResponseType(typeof(ResponseModel), 403)]
@@ -55,7 +55,10 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     public async Task<IActionResult> CreateLoan(LoanCreateModel model)
     {
         var userId = (Guid)HttpContext.Items["UserId"];
-        return Ok(await loanService.CreateLoan(userId, model));
+        var userRoles = (List<RoleDto>)HttpContext.Items["Roles"];
+        var token = HttpContext.Request.Headers.Authorization.ToString().Replace("Bearer ", "");
+        
+        return Ok(await loanService.CreateLoan(userId, model, userRoles, token));
     }
     
     /// <response code="200">Данные о кредите получены</response>
