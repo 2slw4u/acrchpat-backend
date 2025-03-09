@@ -112,7 +112,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     TransactionId = transaction.Id,
                     PaymentId = request.PaymentId,
                     LoanId = request.LoanId,
-                    Type = request.Type,
+                    Type = request.Type == TransactionType.LoanPayment ? "LoanPayment" : "LoanAccrual",
                     Status = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
