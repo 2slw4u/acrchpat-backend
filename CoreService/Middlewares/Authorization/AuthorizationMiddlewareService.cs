@@ -7,6 +7,7 @@ using CoreService.Models.Exceptions;
 using CoreService.Models.Http.Request.User;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Text.RegularExpressions;
 
 namespace CoreService.Middlewares.Authorization
 {
@@ -30,6 +31,8 @@ namespace CoreService.Middlewares.Authorization
         {
             var decipheredToken = new JwtSecurityToken(token);
             var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault().ToString();
+            Regex regex = new Regex(@"(.*(mobilephone\:\s))");
+            login = Regex.Replace(login, regex, String.Empty);
             login = login.Replace("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone: ", "");
             Console.WriteLine($"phone in claims: {login}");
             if (login == null)
