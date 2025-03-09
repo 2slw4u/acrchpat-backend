@@ -118,17 +118,25 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         var moneyLeftToPay = totalMoneyToPay - dailyPayment * payedPaymentsCount;
         
         var baseUrl = $"http://{_backendIp}:5001/core/transaction";
-        var queryParams = new Dictionary<string, string?>();
-        foreach (var transactionId in loan.Transactions)
+        //var queryParams = new Dictionary<string, string?>();
+        if (loan.Transactions.Count > 0)
         {
-            queryParams.Add("Transactions", transactionId.ToString());
+            baseUrl += $"?Transactions={loan.Transactions[0]}";
         }
-        var fullUrl = QueryHelpers.AddQueryString(baseUrl, queryParams);
+        for (int i = 1; i < loan.Transactions.Count; i++)
+        {
+            baseUrl += $"&Transactions={loan.Transactions[i]}";
+        }
+        //foreach (var transactionId in loan.Transactions)
+        //{
+            //queryParams.Add("Transactions", transactionId.ToString());
+        //}
+        //var fullUrl = QueryHelpers.AddQueryString(baseUrl, queryParams);
         
         HttpClient client = new();
         client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
         
-        var transactionsResponse = await client.GetAsync(fullUrl);
+        var transactionsResponse = await client.GetAsync(baseUrl);
 
         if (!transactionsResponse.IsSuccessStatusCode)
         {
