@@ -98,7 +98,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 var rabbitProducer = scope.ServiceProvider.GetRequiredService<IRabbitMqProducer>();
 
                 var transaction = mapper.Map<TransactionEntity>(request);
-                if (errorMessage != null)
+                if (errorMessage == null)
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
                     var account = dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefault();
