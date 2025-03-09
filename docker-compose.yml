@@ -54,6 +54,7 @@ services:
       context: ./CoreService
     depends_on:
       - postgres-core
+      - rabbitmq
     ports:
       - "5001:80"
     environment:
@@ -65,6 +66,7 @@ services:
       context: ./LoanService
     depends_on:
       - postgres-loan
+      - rabbitmq
     ports:
       - "5002:80"
     environment:
@@ -76,6 +78,7 @@ services:
       context: ./UserService
     depends_on:
       - postgres-user
+      - rabbitmq
     ports:
       - "5003:80"
     environment:
