@@ -33,7 +33,6 @@ namespace CoreService.Middlewares.Authorization
             var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault().ToString();
             Regex regex = new Regex(@"(.*(mobilephone\:\s))");
             login = regex.Replace(login, "");
-            //login = login.Replace("http://schemas.xmlsoap.org/ws/2005/05/identity/claims/mobilephone: ", "");
             Console.WriteLine($"phone in claims: {login}");
             if (login == null)
             {
