@@ -17,11 +17,6 @@ namespace UserService.Controllers
 			_banService = banService;
 		}
 
-		/// <summary>
-		/// Получить историю банов для указанного пользователя.
-		/// </summary>
-		/// <param name="userId">Идентификатор пользователя</param>
-		/// <returns>Список банов</returns>
 		[HttpGet("history/{userId}")]
 		[Authorize]
 		[ProducesResponseType(typeof(List<BanDto>), 200)]
@@ -31,13 +26,8 @@ namespace UserService.Controllers
 			return Ok(history);
 		}
 
-		/// <summary>
-		/// Забанить пользователя. Банить могут только сотрудники (employee).
-		/// </summary>
-		/// <param name="userId">Идентификатор пользователя для бана</param>
-		/// <returns>Результат операции</returns>
 		[HttpPost("ban/{userId}")]
-		[Authorize]
+		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
 		public async Task<IActionResult> BanUser(Guid userId)
 		{
@@ -46,13 +36,8 @@ namespace UserService.Controllers
 			return Ok(result);
 		}
 
-		/// <summary>
-		/// Разбанить пользователя. Разбанивать могут только сотрудники (employee).
-		/// </summary>
-		/// <param name="userId">Идентификатор пользователя для разбана</param>
-		/// <returns>Результат операции</returns>
 		[HttpPost("unban/{userId}")]
-		[Authorize]
+		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
 		public async Task<IActionResult> UnbanUser(Guid userId)
 		{

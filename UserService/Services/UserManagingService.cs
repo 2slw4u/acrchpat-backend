@@ -11,7 +11,6 @@ namespace UserService.Services
 	public class UserManagingService : IUserManagingService
 	{
 		private readonly AppDbContext _context;
-		private readonly ILogger<UserManagingService> _logger;
 		private readonly IAuthenticationService _authenticationService;
 		private readonly IRolesService _rolesService;
 		private readonly UserManager<UserEntity> _userManager;
@@ -24,7 +23,6 @@ namespace UserService.Services
 			UserManager<UserEntity> userManager)
 		{
 			_context = context;
-			_logger = logger;
 			_authenticationService = authenticationService;
 			_rolesService = rolesService;
 			_userManager = userManager;
@@ -44,11 +42,6 @@ namespace UserService.Services
 		public async Task<UserDto> CreateUser(UserCreateDto newUserData)
 		{
 			var user = await _authenticationService.GetCurrentUser();
-
-			if (!await IsEmployee(user))
-			{
-				throw new ForbiddenException("User isn't permitted to create new users");
-			}
 
 			await ValidateUserModel(newUserData);
 
@@ -87,6 +80,15 @@ namespace UserService.Services
 			return userDto;
 		}
 
+		public async Task<UserDto> GetUserById(Guid id)
+		{
+			var user = await FullInfoById(id);
+
+			var userDto = new UserDto(user);
+
+			return userDto;
+		}
+
 		public async Task<List<UserDto>> GetUsers(Guid? role)
 		{
 			IQueryable<UserEntity> query = _context.Users.Include(u => u.Roles).Include(u => u.Bans);
@@ -105,19 +107,7 @@ namespace UserService.Services
 
 		public async Task<ResponseDto> AddRole(Guid userId, Guid roleId)
 		{
-			var user = await _authenticationService.GetCurrentUser();
-			if (!await IsEmployee(user))
-			{
-				throw new ForbiddenException("User isn't permitted to create new users");
-			}
-
-			var userEntity = await _context.Users
-				.Include(u => u.Roles)
-				.FirstOrDefaultAsync(u => u.Id == userId);
-			if (userEntity == null)
-			{
-				throw new BadRequestException("Invalid user id");
-			}
+			var userEntity = await FullInfoById(userId);
 
 			var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
 			if (roleEntity == null)
@@ -138,19 +128,7 @@ namespace UserService.Services
 
 		public async Task<ResponseDto> RemoveRole(Guid userId, Guid roleId)
 		{
-			var user = await _authenticationService.GetCurrentUser();
-			if (!await IsEmployee(user))
-			{
-				throw new ForbiddenException("User isn't permitted to remove roles");
-			}
-
-			var userEntity = await _context.Users
-				.Include(u => u.Roles)
-				.FirstOrDefaultAsync(u => u.Id == userId);
-			if (userEntity == null)
-			{
-				throw new BadRequestException("Invalid user id");
-			}
+			var userEntity = await FullInfoById(userId);
 
 			var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
 			if (roleEntity == null)
@@ -158,15 +136,16 @@ namespace UserService.Services
 				throw new BadRequestException("Invalid role id");
 			}
 
-			if (user.Roles.Count <= 1)
-			{
-				throw new BadRequestException("User must have at least one role");
-			}
-
 			if (!userEntity.Roles.Any(r => r.Id == roleId))
 			{
 				throw new BadRequestException($"User with id {userId} does not have role with id {roleId}");
 			}
+
+			if (userEntity.Roles.Count <= 1)
+			{
+				throw new BadRequestException("User must have at least one role");
+			}
+
 
 			userEntity.Roles.Remove(roleEntity);
 			await _context.SaveChangesAsync();
@@ -179,11 +158,24 @@ namespace UserService.Services
 			throw new NotImplementedException();
 		}
 
+		public async Task<UserEntity> FullInfoById(Guid id)
+		{
+			var user = await _context.Users.Include(u => u.Roles).Include(u => u.Bans).FirstOrDefaultAsync(u => u.Id == id);
+
+			if (user == null)
+			{
+				throw new NotFoundException("Invalid user id; User not found");
+			}
+
+			return user;
+		}
+
 		private async Task<bool> IsEmployee(UserEntity user)
 		{
 			var employeeRole = await _rolesService.FindByName("Employee");
 			return user.Roles.Contains(employeeRole);
 		}
+
 		private async Task<UserEntity> AddUserToDatabase(UserCreateDto userDto)
 		{
 			var roles = await _context.Roles

@@ -12,12 +12,10 @@ namespace UserService.Services
 	{
 
 		private readonly AppDbContext _context;
-		private readonly ILogger<RolesService> _logger;
 
-		public RolesService(AppDbContext context, ILogger<RolesService> logger)
+		public RolesService(AppDbContext context)
 		{
 			_context = context;
-			_logger = logger;
 		}
 
 		public async Task<List<RoleDto>> GetRoles()
