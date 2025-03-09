@@ -43,6 +43,7 @@ namespace CoreService.Services
             var transaction = _mapper.Map<TransactionEntity>(request);
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
+            
             await _dbContext.SaveChangesAsync();
             return new DepositMoneyToAccountResponse
             {
