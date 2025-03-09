@@ -7,7 +7,7 @@ public interface ILoanManagerService
 {
     Task<LoanPreviewDto> CalculateLoan(double givenMoney, int termDays, Guid rateId);
 
-    Task<Guid> CreateLoan(Guid userId, LoanCreateModel model);
+    Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles, string token);
 
     Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token);
 
