@@ -37,7 +37,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
             await _channel.ExchangeDeclareAsync(
                 exchange: transactionResultExchange,
                 type: ExchangeType.Fanout,
-                durable: false
+                durable: true
             );
             _exchanges.Add("TransactionResult", transactionResultExchange);
         }
