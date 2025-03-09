@@ -2,6 +2,7 @@ using System.Text;
 using LoanService.Database;
 using LoanService.Integrations;
 using LoanService.Middleware;
+using LoanService.Services;
 using LoanService.Services.Interfaces;
 using LoanService.Services.Logic;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -84,6 +85,7 @@ builder.Services.AddScoped<IRateService, RateService>();
 builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
 builder.Services.AddSingleton<IRabbitMqTransactionRequestProducer, RabbitMqTransactionRequestProducer>();
 builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
+builder.Services.AddHostedService<LoanAutopaymentProcessor>();
 
 var app = builder.Build();
 

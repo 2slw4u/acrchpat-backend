@@ -5,7 +5,7 @@ namespace UserService.Services.Interfaces
 {
 	public interface IAuthenticationService
 	{
-		Task<UserEntity> Authenticate();
+		Task<UserEntity> GetCurrentUser();
 
 		AuthenticationResponse CreateAuthCredentials(UserEntity user);
 	}

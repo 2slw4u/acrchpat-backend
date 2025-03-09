@@ -33,7 +33,7 @@ namespace CoreService.Services
 
         public async Task<GetClientAccountsResponse> GetClientAccounts(HttpContext httpContext, GetClientAccountsRequest request)
         {
-            var accounts = await _dbContext.Accounts.Where(x => request.Users.Contains(x.Id)).ToListAsync();
+            var accounts = await _dbContext.Accounts.Where(x => request.Users.Contains(x.UserId)).ToListAsync();
             return new GetClientAccountsResponse
             {
                 Accounts = accounts.Select(x => _mapper.Map<DetailedAccountDTO>(x)).ToList()

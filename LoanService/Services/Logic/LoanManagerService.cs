@@ -9,13 +9,14 @@ using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
 
-public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration, IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
+public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration,
+    ILogger<LoanManagerService> logger,
+    IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
 {
     private readonly string? _backendIp = configuration["Backend:VpaIp"];
     
@@ -29,7 +30,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             throw new ResourceNotFoundException($"Rate with ID {rateId} not found in the database");
         }
         
-        double dailyPayment = CalculateDailyPayment(rate.RateValue, givenMoney, termDays);
+        var dailyPayment = CalculateDailyPayment(rate.RateValue, givenMoney, termDays);
 
         return new LoanPreviewDto
         {
@@ -38,7 +39,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         };
     }
 
-    public async Task<Guid> CreateLoan(Guid userId, LoanCreateModel model)
+    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles, string token)
     {
         var deadlineTime = DateTime.UtcNow.AddDays(model.TermDays);
         
@@ -53,7 +54,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         var dailyPayment = CalculateDailyPayment(rate.RateValue, model.Amount, model.TermDays);
         
         var payments = new List<LoanPayment>();
-        for (int i = 1; i <= model.TermDays; i++)
+        for (var i = 1; i <= model.TermDays; i++)
         {
             payments.Add(new LoanPayment
             {
@@ -87,8 +88,8 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         await dbContext.Loans.AddAsync(loan);
         await dbContext.SaveChangesAsync();
-
-        return loan.Id;
+        
+        return await GetLoan(loan.Id, userId, roles, token);
     }
 
     public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token)
@@ -117,27 +118,31 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         var totalMoneyToPay = dailyPayment * termDays;
         var moneyLeftToPay = totalMoneyToPay - dailyPayment * payedPaymentsCount;
-        
-        var baseUrl = $"http://{_backendIp}:5001/core/transaction";
-        var queryParams = new Dictionary<string, string?>();
-        foreach (var transactionId in loan.Transactions)
-        {
-            queryParams.Add("Transactions", transactionId.ToString());
-        }
-        var fullUrl = QueryHelpers.AddQueryString(baseUrl, queryParams);
-        
-        HttpClient client = new();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        
-        var transactionsResponse = await client.GetAsync(fullUrl);
 
-        if (!transactionsResponse.IsSuccessStatusCode)
+        var transactions = new List<TransactionDto>();
+
+        if (loan.Transactions.Count > 0)
         {
-            throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
+            var baseUrl = $"http://{_backendIp}:5001/core/transaction?Transactions={loan.Transactions[0]}";
+            for (int i = 1; i < loan.Transactions.Count; i++)
+            {
+                baseUrl += $"&Transactions={loan.Transactions[i]}";
+            }
+            logger.LogInformation(baseUrl);
+            
+            HttpClient client = new();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            
+            var transactionsResponse = await client.GetAsync(baseUrl);
+
+            if (!transactionsResponse.IsSuccessStatusCode)
+            {
+                throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
+            }
+            
+            var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
+            transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
-        
-        var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
-        var transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         
         return new LoanDetailDto
         {
