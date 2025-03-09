@@ -7,18 +7,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace LoanService.Migrations
 {
     /// <inheritdoc />
-    public partial class AddLoans : Migration
+    public partial class InitialCreate : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.AlterColumn<double>(
-                name: "RateValue",
-                table: "Rates",
-                type: "double precision",
-                nullable: false,
-                oldClrType: typeof(float),
-                oldType: "real");
+            migrationBuilder.CreateTable(
+                name: "Rates",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    CreateTime = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    Name = table.Column<string>(type: "character varying(5000)", maxLength: 5000, nullable: false),
+                    RateValue = table.Column<double>(type: "double precision", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Rates", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "Loans",
@@ -84,13 +90,8 @@ namespace LoanService.Migrations
             migrationBuilder.DropTable(
                 name: "Loans");
 
-            migrationBuilder.AlterColumn<float>(
-                name: "RateValue",
-                table: "Rates",
-                type: "real",
-                nullable: false,
-                oldClrType: typeof(double),
-                oldType: "double precision");
+            migrationBuilder.DropTable(
+                name: "Rates");
         }
     }
 }
