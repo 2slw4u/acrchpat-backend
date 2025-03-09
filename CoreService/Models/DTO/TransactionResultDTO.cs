@@ -16,5 +16,6 @@ namespace CoreService.Models.DTO
         public DateTime PerformedAt { get; set; }
         [Required]
         public bool Successful { get; set; }
+        public string? ErrorMessage { get; set; }
     }
 }
