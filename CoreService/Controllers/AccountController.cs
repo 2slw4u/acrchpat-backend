@@ -36,9 +36,9 @@ namespace CoreService.Controllers
         [EndpointSummary("(OpenNewAccount) Opens new account for a given user")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task OpenNewAccount(OpenNewAccountRequest request)
+        public async Task<OpenNewAccountResponse> OpenNewAccount(OpenNewAccountRequest request)
         {
-            await _accountService.OpenNewAccount(HttpContext, request);
+            return await _accountService.OpenNewAccount(HttpContext, request);
         }
 
         [HttpGet]
