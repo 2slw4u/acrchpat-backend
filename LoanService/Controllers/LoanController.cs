@@ -110,18 +110,39 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     /// <response code="403">Нет полномочий</response>
     /// <response code="404">Данные не найдены</response>
     /// <response code="500">Ошибка сервера</response>
-    [HttpGet("history")]
-    [EndpointSummary("Получить кредитную историю")]
-    [Authorize]
+    [HttpGet("my-history")]
+    [EndpointSummary("Получить свою кредитную историю")]
+    [RoleAuthorize("Client")]
     [ProducesResponseType(typeof(List<LoanShortDto>), 200)]
     [ProducesResponseType(typeof(ResponseModel), 400)]
     [ProducesResponseType(typeof(ResponseModel), 401)]
     [ProducesResponseType(typeof(ResponseModel), 403)]
     [ProducesResponseType(typeof(ResponseModel), 404)]
     [ProducesResponseType(typeof(ResponseModel), 500)]
-    public async Task<IActionResult> GetLoanHistory()
+    public async Task<IActionResult> GetMyLoanHistory()
     {
         var userId = (Guid)HttpContext.Items["UserId"];
+        return Ok(await loanService.GetLoanHistory(userId));
+    }
+    
+    /// <response code="200">Часть кредита оплачена</response>
+    /// <response code="400">Неверные входные данные</response>
+    /// <response code="401">Неавторизован</response>
+    /// <response code="403">Нет полномочий</response>
+    /// <response code="404">Данные не найдены</response>
+    /// <response code="500">Ошибка сервера</response>
+    [HttpGet("history")]
+    [EndpointSummary("Получить кредитную историю")]
+    [Authorize]
+    [RoleAuthorize("Employee")]
+    [ProducesResponseType(typeof(List<LoanShortDto>), 200)]
+    [ProducesResponseType(typeof(ResponseModel), 400)]
+    [ProducesResponseType(typeof(ResponseModel), 401)]
+    [ProducesResponseType(typeof(ResponseModel), 403)]
+    [ProducesResponseType(typeof(ResponseModel), 404)]
+    [ProducesResponseType(typeof(ResponseModel), 500)]
+    public async Task<IActionResult> GetLoanHistory([FromQuery] Guid userId)
+    {
         return Ok(await loanService.GetLoanHistory(userId));
     }
 }
