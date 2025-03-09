@@ -118,36 +118,31 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         var totalMoneyToPay = dailyPayment * termDays;
         var moneyLeftToPay = totalMoneyToPay - dailyPayment * payedPaymentsCount;
-        
-        var baseUrl = $"http://{_backendIp}:5001/core/transaction";
-        //var queryParams = new Dictionary<string, string?>();
+
+        var transactions = new List<TransactionDto>();
+
         if (loan.Transactions.Count > 0)
         {
-            baseUrl += $"?Transactions={loan.Transactions[0]}";
-        }
-        for (int i = 1; i < loan.Transactions.Count; i++)
-        {
-            baseUrl += $"&Transactions={loan.Transactions[i]}";
-        }
-        logger.LogInformation(baseUrl);
-        //foreach (var transactionId in loan.Transactions)
-        //{
-            //queryParams.Add("Transactions", transactionId.ToString());
-        //}
-        //var fullUrl = QueryHelpers.AddQueryString(baseUrl, queryParams);
-        
-        HttpClient client = new();
-        client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        
-        var transactionsResponse = await client.GetAsync(baseUrl);
+            var baseUrl = $"http://{_backendIp}:5001/core/transaction?Transactions={loan.Transactions[0]}";
+            for (int i = 1; i < loan.Transactions.Count; i++)
+            {
+                baseUrl += $"&Transactions={loan.Transactions[i]}";
+            }
+            logger.LogInformation(baseUrl);
+            
+            HttpClient client = new();
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            
+            var transactionsResponse = await client.GetAsync(baseUrl);
 
-        if (!transactionsResponse.IsSuccessStatusCode)
-        {
-            throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
+            if (!transactionsResponse.IsSuccessStatusCode)
+            {
+                throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
+            }
+            
+            var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
+            transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         }
-        
-        var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
-        var transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
         
         return new LoanDetailDto
         {
