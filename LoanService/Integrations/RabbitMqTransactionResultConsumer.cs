@@ -1,18 +1,24 @@
 ﻿using System.Text;
 using System.Text.Json;
 using LoanService.Models.General;
+using LoanService.Services.Interfaces;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
 namespace LoanService.Integrations;
 
-public class RabbitMqConsumerService(IConfiguration configuration, ILogger<RabbitMqConsumerService> logger) : BackgroundService
+public class RabbitMqTransactionResultConsumer(
+    IConfiguration configuration,
+    ILogger<RabbitMqTransactionResultConsumer> logger,
+    ILoanManagerService loanService
+    ) : BackgroundService
 {
     private string backendIp = configuration["Backend:VpaIp"];
+    private const string TransactionResultExchange = "transaction.result";
     private IConnection? _connection;
     private IChannel? _channel;
     private AsyncEventingBasicConsumer? _consumer;
-    private const string QueueName = "TestQueue";
+    private const string QueueName = "LoanConsumer";
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -62,6 +68,12 @@ public class RabbitMqConsumerService(IConfiguration configuration, ILogger<Rabbi
                 cancellationToken: cancellationToken
             );
 
+            await _channel.QueueBindAsync(
+                queue: QueueName,
+                exchange: TransactionResultExchange,
+                routingKey: string.Empty
+            );
+
             logger.LogInformation("RabbitMQ connected and queue declared.");
         }
         catch (Exception ex)
@@ -77,14 +89,29 @@ public class RabbitMqConsumerService(IConfiguration configuration, ILogger<Rabbi
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
-            var transaction = JsonSerializer.Deserialize<TransactionDto>(message);
+            var result = JsonSerializer.Deserialize<TransactionResult>(message);
 
-            if (transaction != null)
+            if (result != null)
             {
-                logger.LogInformation($"Received transaction {transaction.Id}");
+                logger.LogInformation($"Received transaction request result for loan with ID {result.LoanId}," +
+                                      $" it is a {result.Status}. Transaction ID: {result.TransactionId}, payment ID:" +
+                                      $" {result.PaymentId} error message: {result.ErrorMessage}");
                 
-                //await _transactionService.ProcessTransactionAsync(transaction);
-                //Console.WriteLine(transaction.Id);
+                if (result.Status == TransactionResultStatus.Success)
+                {
+                    await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
+                }
+                else
+                {
+                    if (result.Type == TransactionType.LoanPayment)
+                    {
+                        await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);
+                    }
+                    else if (result.Type == TransactionType.LoanAccrual)
+                    {
+                        await loanService.DeleteInvalidLoan(result.LoanId);
+                    }
+                }
             }
             
             if (_channel != null)

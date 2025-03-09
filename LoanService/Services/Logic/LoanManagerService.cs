@@ -3,6 +3,7 @@ using System.Text.Json;
 using LoanService.Database;
 using LoanService.Database.TableModels;
 using LoanService.Exceptions;
+using LoanService.Integrations;
 using LoanService.Middleware;
 using LoanService.Models.General;
 using LoanService.Models.Loan;
@@ -14,7 +15,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
 
-public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration) : ILoanManagerService
+public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration, IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
 {
     private readonly string? _backendIp = configuration["Backend:VpaIp"];
     
@@ -76,7 +77,13 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             Transactions = new()
         };
         
-        //отправить запрос на зачисление денег в кролика
+        await producer.SendTransactionRequestMessage(new TransactionRequest
+        {
+            LoanId = loan.Id,
+            Amount = loan.GivenMoney,
+            Type = TransactionType.LoanAccrual,
+            AccountId = model.AccountIdToReceiveMoney
+        });
         
         await dbContext.Loans.AddAsync(loan);
         await dbContext.SaveChangesAsync();
@@ -162,7 +169,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         };
     }
 
-    public async Task<int> PayLoan(Guid userId, Guid loanId, Guid? paymentId)
+    public async Task<string> PayLoan(Guid userId, Guid loanId, Guid? paymentId, Guid? accountId)
     {
         var loan = await dbContext.Loans
             .Include(l => l.Payments)
@@ -202,9 +209,17 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             }
         }
         
-        //оплатить
+        await producer.SendTransactionRequestMessage(new TransactionRequest
+        {
+            LoanId = loan.Id,
+            PaymentId = payment.Id,
+            Amount = payment.Amount,
+            Type = TransactionType.LoanPayment,
+            UserId = userId,
+            AccountId = accountId
+        });
 
-        return 0; //возвращаю дто транзакции (типа чек) или ошибку
+        return "Transaction request sent";
     }
 
     public async Task<List<LoanShortDto>> GetLoanHistory(Guid userId)
@@ -220,6 +235,86 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
                 Status = l.Status
             })
             .ToListAsync();
+    }
+
+    public async Task AddTransaction(Guid loanId, Guid transactionId, Guid? paymentId)
+    {
+        var loan = await dbContext.Loans
+            .Include(l => l.Payments)
+            .FirstOrDefaultAsync(l => l.Id == loanId);
+
+        if (loan == null)
+        {
+            throw new ResourceNotFoundException($"Loan with ID {loanId} not found in database");
+        }
+        
+        loan.Transactions.Add(transactionId);
+
+        if (paymentId != null)
+        {
+            var payment = loan.Payments
+                .FirstOrDefault(p => p.Id == paymentId);
+
+            if (payment == null)
+            {
+                throw new ResourceNotFoundException($"Loan with ID {loanId} does not have a payment with ID {paymentId}");
+            }
+
+            payment.Status = PaymentStatus.Payed;
+
+            if (loan.Payments.Count(p => p.Status != PaymentStatus.Payed) == 0)
+            {
+                loan.Status = LoanStatus.Closed;
+            }
+        }
+        
+        await dbContext.SaveChangesAsync();
+    }
+
+    public async Task MarkPaymentAsOverdue(Guid loanId, Guid paymentId)
+    {
+        var loan = await dbContext.Loans
+            .Include(l => l.Payments)
+            .FirstOrDefaultAsync(l => l.Id == loanId);
+
+        if (loan == null)
+        {
+            throw new ResourceNotFoundException($"Loan with ID {loanId} not found in database");
+        }
+        
+        var payment = loan.Payments
+            .FirstOrDefault(p => p.Id == paymentId);
+
+        if (payment == null)
+        {
+            throw new ResourceNotFoundException($"Loan with ID {loanId} does not have a payment with ID {paymentId}");
+        }
+
+        if (payment.PaymentTime >= DateTime.Now)
+        {
+            payment.Status = PaymentStatus.Overdue;
+
+            if (loan.Payments.Count(p => p.Status == PaymentStatus.NotYet) == 0)
+            {
+                loan.Status = LoanStatus.Overdue;
+            }
+        
+            await dbContext.SaveChangesAsync();
+        }
+    }
+
+    public async Task DeleteInvalidLoan(Guid loanId)
+    {
+        var loan = await dbContext.Loans
+            .FirstOrDefaultAsync(l => l.Id == loanId);
+
+        if (loan == null)
+        {
+            throw new ResourceNotFoundException($"Loan with ID {loanId} not found in database");
+        }
+
+        dbContext.Remove(loan);
+        await dbContext.SaveChangesAsync();
     }
 
     private static double CalculateDailyPayment(double ratePercent, double givenMoney, int termDays)
