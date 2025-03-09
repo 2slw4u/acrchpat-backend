@@ -53,13 +53,13 @@ namespace CoreService.Controllers
         }
 
         [HttpGet]
-        [Route("transactions/{userId}")]
-        [EndpointSummary("(GetClientTransactionHistory) Returns transaction history of a given user. Used by support specialists")]
+        [Route("transactions/{accountId}")]
+        [EndpointSummary("(GetAccountTransactionHistory) Returns transaction history of a given account. Used by support specialists")]
         [Authorize]
         [RoleAuthorize(UserRole.Employee)]
-        public async Task<GetClientTransactionHistoryResponse> GetClientTransactionHistory(GetClientTransactionHistoryRequest request)
+        public async Task<GetAccountTransactionHistoryResponse> GetAccountTransactionHistory(GetAccountTransactionHistoryRequest request)
         {
-            return await _supportService.GetClientTransactionHistory(HttpContext, request);
+            return await _supportService.GetAccountTransactionHistory(HttpContext, request);
         }
     }
 }

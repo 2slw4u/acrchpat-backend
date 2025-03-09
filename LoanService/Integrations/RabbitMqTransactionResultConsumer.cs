@@ -25,7 +25,8 @@ public class RabbitMqTransactionResultConsumer(
     {
         await _channel.ExchangeDeclareAsync(
             exchange: TransactionResultExchange,
-            type: ExchangeType.Fanout
+            type: ExchangeType.Fanout,
+            durable: true
         );
     }
 
