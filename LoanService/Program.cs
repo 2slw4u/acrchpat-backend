@@ -82,7 +82,8 @@ if (!builder.Environment.IsDevelopment())
 
 builder.Services.AddScoped<IRateService, RateService>();
 builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
-builder.Services.AddSingleton<IRabbitMqService, RabbitMqService>();
+builder.Services.AddSingleton<IRabbitMqTransactionRequestProducer, RabbitMqTransactionRequestProducer>();
+builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
 
 var app = builder.Build();
 

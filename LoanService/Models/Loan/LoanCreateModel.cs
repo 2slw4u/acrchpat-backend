@@ -7,4 +7,6 @@ public class LoanCreateModel
     public int TermDays { get; set; }
     
     public Guid RateId { get; set; }
+    
+    public Guid AccountIdToReceiveMoney { get; set; }
 }

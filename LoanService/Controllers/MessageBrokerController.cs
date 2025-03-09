@@ -6,12 +6,12 @@ namespace LoanService.Controllers;
 
 [ApiController]
 [Route("test/rabbit")]
-public class MessageBrokerController(IRabbitMqService rabbitMqService) : Controller
+public class MessageBrokerController(IRabbitMqTransactionRequestProducer rabbitMqTransactionRequestProducer) : Controller
 {
     [HttpPost]
-    public IActionResult Publish([FromBody] TransactionDto transaction)
+    public IActionResult Publish([FromBody] TransactionRequest transaction)
     {
-        rabbitMqService.SendMessage(transaction);
+        rabbitMqTransactionRequestProducer.SendTransactionRequestMessage(transaction);
         return Ok("Всё отправилось");
     }
 }
