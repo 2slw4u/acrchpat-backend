@@ -141,7 +141,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             }
             
             var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
-            transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            transactions = JsonSerializer.Deserialize<GetTransactionsDataResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }).Transactions;
         }
         
         return new LoanDetailDto
