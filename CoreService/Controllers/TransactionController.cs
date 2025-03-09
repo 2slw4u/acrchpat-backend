@@ -36,9 +36,9 @@ namespace CoreService.Controllers
         [EndpointSummary("(DepositMoneyToAccount) Imitates depositing money from ATM")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task DepositMoneyToAccount(DepositMoneyToAccountRequest request)
+        public async Task<DepositMoneyToAccountResponse> DepositMoneyToAccount(DepositMoneyToAccountRequest request)
         {
-            await _transactionService.DepositMoneyToAccount(HttpContext, request);
+            return await _transactionService.DepositMoneyToAccount(HttpContext, request);
         }
 
         [HttpPost]
@@ -46,9 +46,9 @@ namespace CoreService.Controllers
         [EndpointSummary("(WithdrawMoneyFromAccount) Imitates wihdrawal money with ATM")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
+        public async Task<WithdrawMoneyFromAccountResponse> WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
         {
-            await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);
+            return await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);
         }
 
         [HttpGet]
