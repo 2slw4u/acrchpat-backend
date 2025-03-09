@@ -112,7 +112,7 @@ public class RabbitMqTransactionResultConsumer(
                 {
                     var loanService = scope.ServiceProvider.GetRequiredService<ILoanManagerService>();
             
-                    if (result.Status == TransactionResultStatus.Success)
+                    if (result.Status)
                     {
                         await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
                     }
