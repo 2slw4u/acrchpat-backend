@@ -105,7 +105,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     transaction.Account = account;
                     await dbContext.Transactions.AddAsync(transaction);
                     await dbContext.SaveChangesAsync();
-                    _logger.LogInformation($"New transaction in DB: {transaction}");
+                    _logger.LogInformation($"New transaction in DB: {transaction.Id.ToString()}");
                 }
 
                 var response = new TransactionResultDTO
@@ -117,7 +117,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     Status = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
-                _logger.LogInformation($"TransactionResultExchange message: {response}");
+                _logger.LogInformation($"TransactionResultExchange message: {response.TransactionId.ToString()}");
                 await rabbitProducer.SendTransactionResultMessage(response);
             }
         }
