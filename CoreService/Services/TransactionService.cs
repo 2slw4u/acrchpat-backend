@@ -23,7 +23,7 @@ namespace CoreService.Services
             _mapper = mapper;
         }
 
-        public async Task DepositMoneyToAccount(HttpContext httpContext, DepositMoneyToAccountRequest request)
+        public async Task<DepositMoneyToAccountResponse> DepositMoneyToAccount(HttpContext httpContext, DepositMoneyToAccountRequest request)
         {
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
@@ -43,8 +43,11 @@ namespace CoreService.Services
             var transaction = _mapper.Map<TransactionEntity>(request);
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
-            
             await _dbContext.SaveChangesAsync();
+            return new DepositMoneyToAccountResponse
+            {
+                NewDepositTransaction = _mapper.Map<TransactionDTO>(transaction)
+            };
         }
 
         public async Task<GetTransactionsDataResponse> GetTransactionsData(HttpContext httpContext, GetTransactionsDataRequest request)
@@ -97,7 +100,7 @@ namespace CoreService.Services
             };
         }
 
-        public async Task WithdrawMoneyFromAccount(HttpContext httpContext, WithdrawMoneyFromAccountRequest request)
+        public async Task<WithdrawMoneyFromAccountResponse> WithdrawMoneyFromAccount(HttpContext httpContext, WithdrawMoneyFromAccountRequest request)
         {
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
@@ -122,6 +125,10 @@ namespace CoreService.Services
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
             await _dbContext.SaveChangesAsync();
+            return new WithdrawMoneyFromAccountResponse
+            {
+                NewWithdrawalTransaction = _mapper.Map<TransactionDTO>(transaction)
+            };
         }
     }
 }
