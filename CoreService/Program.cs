@@ -10,6 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using CoreService.Integrations.Http.UserService;
 using CoreService.Helpers.Cache;
+using CoreService.Integrations.AMQP.RabbitMQ.Producer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -94,6 +95,8 @@ builder.Services.AddScoped<ISupportService, SupportService>();
 
 builder.Services.AddSingleton<IUserServiceAdapter, UserServiceAdapter>();
 builder.Services.AddSingleton<IUserParametersCache, UserParametersCache>();
+
+builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
 
 builder.Services.AddMemoryCache();
 
