@@ -1,6 +1,6 @@
 ﻿using UserService.Models.Exceptions;
 
-namespace UserService.Middlewares
+namespace UserService.Middlewares.Exception
 {
 	public class ExceptionMiddlewareService
 	{

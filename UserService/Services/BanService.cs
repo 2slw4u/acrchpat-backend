@@ -46,7 +46,7 @@ namespace UserService.Services
 
 		public async Task<ResponseDto> BanUser(Guid id)
 		{
-			var currentUser = await _authenticationService.Authenticate();
+			var currentUser = await _authenticationService.GetCurrentUser();
 			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
 			{
 				throw new ForbiddenException("User isn't permitted to ban users");
@@ -81,18 +81,19 @@ namespace UserService.Services
 			_context.Bans.Add(ban);
 			await _context.SaveChangesAsync();
 
+			await SendUpdate(userToBan);
+
 			var result = new ResponseDto
 			{
 				Status = "Success",
 				Message = "User banned successfully."
 			};
-			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(userToBan));
 			return result;
 		}
 
 		public async Task<ResponseDto> UnbanUser(Guid id)
 		{
-			var currentUser = await _authenticationService.Authenticate();
+			var currentUser = await _authenticationService.GetCurrentUser();
 			if (currentUser == null || !currentUser.Roles.Any(r => r.Name.Equals("Employee", StringComparison.OrdinalIgnoreCase)))
 			{
 				throw new ForbiddenException("User isn't permitted to ban users");
@@ -122,6 +123,8 @@ namespace UserService.Services
 			activeBan.BanEnd = DateTime.UtcNow;
 			await _context.SaveChangesAsync();
 
+			await SendUpdate(userToBan);
+
 			var result = new ResponseDto
 			{
 				Status = "Success",
@@ -129,6 +132,11 @@ namespace UserService.Services
 			};
 
 			return result;
+		}
+
+		private async Task SendUpdate(UserEntity user)
+		{
+			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(user));
 		}
 	}
 }

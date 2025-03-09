@@ -115,14 +115,15 @@ catch (Exception ex)
 	Console.WriteLine(ex);
 }
 
+app.UseExceptionMiddleware();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-app.UseExceptionMiddleware();
-
 app.UseAuthentication();
+app.UseAuthorizationMiddleware();
 app.UseAuthorization();
 
 app.MapControllers();
