@@ -9,7 +9,6 @@ using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
-using Microsoft.AspNetCore.Connections;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
@@ -29,7 +28,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             throw new ResourceNotFoundException($"Rate with ID {rateId} not found in the database");
         }
         
-        double dailyPayment = CalculateDailyPayment(rate.RateValue, givenMoney, termDays);
+        var dailyPayment = CalculateDailyPayment(rate.RateValue, givenMoney, termDays);
 
         return new LoanPreviewDto
         {
@@ -53,7 +52,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         var dailyPayment = CalculateDailyPayment(rate.RateValue, model.Amount, model.TermDays);
         
         var payments = new List<LoanPayment>();
-        for (int i = 1; i <= model.TermDays; i++)
+        for (var i = 1; i <= model.TermDays; i++)
         {
             payments.Add(new LoanPayment
             {

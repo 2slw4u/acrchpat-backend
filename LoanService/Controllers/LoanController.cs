@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace LoanService.Controllers;
 
 [ApiController]
-[Microsoft.AspNetCore.Components.Route("api/loan")]
+[Route("api/loan")]
 public class LoanController(ILoanManagerService loanService) : ControllerBase
 {
     /// <response code="200">Всё ок</response>
