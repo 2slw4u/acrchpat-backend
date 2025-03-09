@@ -1,6 +1,5 @@
 ﻿using AutoMapper;
 using CoreService.Helpers;
-using CoreService.Integrations.AMQP.RabbitMQ.Producer;
 using CoreService.Models.Database;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
@@ -17,25 +16,11 @@ namespace CoreService.Services
     {
         private readonly CoreDbContext _dbContext;
         private readonly IMapper _mapper;
-        private readonly IRabbitMqProducerService _rabbitMqProducerService;
 
-        public TransactionService(CoreDbContext dbContext, IMapper mapper, IRabbitMqProducerService rabbitMqProducerService)
+        public TransactionService(CoreDbContext dbContext, IMapper mapper)
         {
             _dbContext = dbContext;
             _mapper = mapper;
-            _rabbitMqProducerService = rabbitMqProducerService;
-        }
-
-        private async Task produceMessage()
-        {
-            await _rabbitMqProducerService.SendTransactionResultMessage(new TransactionResultDTO
-            {
-                Id = Guid.NewGuid(),
-                Amount = 10,
-                Type = TransactionType.Deposit,
-                PerformedAt = DateTime.UtcNow,
-                Successful = true
-            });
         }
 
         public async Task DepositMoneyToAccount(HttpContext httpContext, DepositMoneyToAccountRequest request)
@@ -58,8 +43,6 @@ namespace CoreService.Services
             var transaction = _mapper.Map<TransactionEntity>(request);
             transaction.Account = account;
             _dbContext.Transactions.Add(transaction);
-            
-            await this.produceMessage();
             
             await _dbContext.SaveChangesAsync();
         }
