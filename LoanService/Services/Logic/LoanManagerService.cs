@@ -127,6 +127,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         {
             baseUrl += $"&Transactions={loan.Transactions[i]}";
         }
+        Console.WriteLine(baseUrl);
         //foreach (var transactionId in loan.Transactions)
         //{
             //queryParams.Add("Transactions", transactionId.ToString());
