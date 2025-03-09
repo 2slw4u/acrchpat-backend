@@ -119,11 +119,11 @@ public class RabbitMqTransactionResultConsumer(
                     else
                     {
                         logger.LogError($"Transaction error: {result.ErrorMessage}");
-                        if (result.Type == "LoanPayment")
+                        if (result.Type == TransactionType.LoanPayment)
                         {
                             await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);
                         }
-                        else if (result.Type == "LoanAccrual")
+                        else if (result.Type == TransactionType.LoanAccrual)
                         {
                             await loanService.DeleteInvalidLoan(result.LoanId);
                         }
