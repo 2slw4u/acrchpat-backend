@@ -81,6 +81,27 @@ namespace CoreService.Helpers.Mappers
                     dest => dest.PerformedAt,
                     opt => opt.MapFrom(opt => DateTime.UtcNow)
                 );
+            CreateMap<TransactionRequestDTO, TransactionEntity>()
+                .ForMember(
+                    dest => dest.Id,
+                    opt => opt.MapFrom(src => Guid.NewGuid())
+                )
+                .ForMember(
+                    dest => dest.Account,
+                    opt => opt.MapFrom(src => src.AccountId)
+                )
+                .ForMember(
+                    dest => dest.Amount,
+                    opt => opt.MapFrom(src => src.Amount)
+                )
+                .ForMember(
+                    dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type)
+                )
+                .ForMember(
+                    dest => dest.PerformedAt,
+                    opt => opt.MapFrom(src => DateTime.UtcNow)
+                );
         }
     }
 }
