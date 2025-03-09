@@ -31,7 +31,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 return await dbContext.Accounts.Where(x => x.UserId == userId).ToListAsync();
             }
         }
-        private async Task ValidateTransactionRequest(TransactionRequestDTO request)
+        private async Task<bool> ValidateTransactionRequest(TransactionRequestDTO request)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -39,10 +39,12 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 if (request.Type != TransactionType.LoanAccrual && request.Type != TransactionType.LoanPayment)
                 {
                     await this.SendResult(request, "This transaction type is not supported");
+                    return false;
                 } 
                 if (request.AccountId == null && request.Type == TransactionType.LoanAccrual)
                 {
                     await this.SendResult(request, "При пополнении необходимо указаывать идентификатор счета");
+                    return false;
                 }
                 else if (request.AccountId != null)
                 {
@@ -51,25 +53,30 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     if (account == null)
                     {
                         await this.SendResult(request, "Искомого счета не существует");
+                        return false;
                     }
-                    else if (!userAccounts.Select(x => x.Id).Contains((Guid)request.AccountId))
+                    else if (!userAccounts.Select(x => x.Id).Contains(account.Id))
                     {
                         await this.SendResult(request, "Пользователь не владеет нужным счетом");
+                        return false;
                     }
                     else if (account.Status == AccountStatus.Closed)
                     {
                         await this.SendResult(request, "Искомый счет уже закрыт");
+                        return false;
                     }
                     else if (request.Type == TransactionType.LoanPayment && account.Balance < request.Amount)
                     {
                         await this.SendResult(request, "На счете недостаточно средств для списания");
+                        return false;
                     }
                 }
                 else if (request.Amount < double.Epsilon)
                 {
                     await this.SendResult(request, "Значение поля Amount должно быть положительным");
+                    return false;
                 }
-                await dbContext.SaveChangesAsync();
+                return true;
             }
         }
         private async Task ChangeBalance(TransactionRequestDTO request)
