@@ -14,7 +14,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
 
-public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration, IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
+public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration,
+    ILogger<LoanManagerService> logger,
+    IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
 {
     private readonly string? _backendIp = configuration["Backend:VpaIp"];
     
@@ -127,7 +129,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         {
             baseUrl += $"&Transactions={loan.Transactions[i]}";
         }
-        Console.WriteLine(baseUrl);
+        logger.LogInformation(baseUrl);
         //foreach (var transactionId in loan.Transactions)
         //{
             //queryParams.Add("Transactions", transactionId.ToString());
