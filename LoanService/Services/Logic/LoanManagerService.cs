@@ -207,7 +207,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         else
         {
             payment = loan.Payments
-                .Where(p => p.PaymentTime > DateTime.UtcNow)
+                .Where(p => p.PaymentTime > DateTime.UtcNow && p.Status != PaymentStatus.Payed)
                 .MinBy(p => p.PaymentTime);
 
             if (payment == null)
