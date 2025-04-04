@@ -7,6 +7,7 @@ using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text;
 using UserService.Database;
+using UserService.Integrations.AMQP.RabbitMQ;
 using UserService.Integrations.AMQP.RabbitMQ.Producer;
 using UserService.Middlewares;
 using UserService.Models.Entities;
@@ -101,6 +102,7 @@ builder.Services.AddScoped<IUserManagingService, UserManagingService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<UserBanStatusMessager>();
 builder.Services.AddScoped<IBanService, BanService>();
 builder.Services.AddSingleton<IRabbitMqProducerService, RabbitMqProducerService>();
 

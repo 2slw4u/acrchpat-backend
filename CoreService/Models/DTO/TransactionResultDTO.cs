@@ -6,16 +6,14 @@ namespace CoreService.Models.DTO
     public class TransactionResultDTO
     {
         [Required]
-        public Guid Id { get; set; }
+        public Guid TransactionId { get; set; }
+        public Guid LoanId { get; set; }
         [Required]
-        [Range(double.Epsilon, double.MaxValue)]
-        public double Amount { get; set; }
+        public Guid PaymentId { get; set; }
         [Required]
         public TransactionType Type { get; set; }
         [Required]
-        public DateTime PerformedAt { get; set; }
-        [Required]
-        public bool Successful { get; set; }
+        public bool Status { get; set; }
         public string? ErrorMessage { get; set; }
     }
 }

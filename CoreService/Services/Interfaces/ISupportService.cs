@@ -7,7 +7,7 @@ namespace CoreService.Services.Interfaces
     {
         Task<GetClientAccountsResponse> GetClientAccounts(HttpContext httpContext, GetClientAccountsRequest request);
         Task<GetClientAccountDetailsResponse> GetClientAccountDetails(HttpContext httpContext, GetClientAccountDetailsRequest request);
-        Task<GetClientTransactionHistoryResponse> GetClientTransactionHistory(HttpContext httpContext, GetClientTransactionHistoryRequest request);
+        Task<GetAccountTransactionHistoryResponse> GetAccountTransactionHistory(HttpContext httpContext, GetAccountTransactionHistoryRequest request);
         Task ChangeClientAccountStatus(HttpContext httpContext, ChangeClientAccountStatusRequest request);
     }
 }

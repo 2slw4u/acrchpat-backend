@@ -83,7 +83,8 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             LoanId = loan.Id,
             Amount = loan.GivenMoney,
             Type = TransactionType.LoanAccrual,
-            AccountId = model.AccountIdToReceiveMoney
+            AccountId = model.AccountIdToReceiveMoney,
+            UserId = userId
         });
         
         await dbContext.Loans.AddAsync(loan);
@@ -141,7 +142,8 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             }
             
             var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
-            transactions = JsonSerializer.Deserialize<List<TransactionDto>>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            logger.LogInformation(responseBody);
+            transactions = JsonSerializer.Deserialize<GetTransactionsDataResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }).Transactions;
         }
         
         return new LoanDetailDto
@@ -205,7 +207,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         else
         {
             payment = loan.Payments
-                .Where(p => p.PaymentTime > DateTime.UtcNow)
+                .Where(p => p.PaymentTime > DateTime.UtcNow && p.Status != PaymentStatus.Payed)
                 .MinBy(p => p.PaymentTime);
 
             if (payment == null)
@@ -255,7 +257,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         loan.Transactions.Add(transactionId);
 
-        if (paymentId != null)
+        if (paymentId != Guid.Empty)
         {
             var payment = loan.Payments
                 .FirstOrDefault(p => p.Id == paymentId);

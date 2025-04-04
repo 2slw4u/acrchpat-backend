@@ -40,10 +40,10 @@ namespace CoreService.Services
             };
         }
 
-        public async Task<GetClientTransactionHistoryResponse> GetClientTransactionHistory(HttpContext httpContext, GetClientTransactionHistoryRequest request)
+        public async Task<GetAccountTransactionHistoryResponse> GetAccountTransactionHistory(HttpContext httpContext, GetAccountTransactionHistoryRequest request)
         {
-            var transactions = await _dbContext.Transactions.Where(x => x.Account.UserId == request.userId).ToListAsync();
-            return new GetClientTransactionHistoryResponse
+            var transactions = await _dbContext.Transactions.Where(x => x.Account.Id == request.accountId).ToListAsync();
+            return new GetAccountTransactionHistoryResponse
             {
                 Transactions = transactions.Select(x => _mapper.Map<DetailedTransactionDTO>(x)).ToList()
             };

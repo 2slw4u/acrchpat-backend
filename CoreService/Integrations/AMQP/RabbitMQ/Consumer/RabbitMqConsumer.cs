@@ -17,14 +17,16 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
         private string _connectionUri;
         private string _queue;
         private string _exchange;
+        protected ILogger _logger;
 
         public RabbitMqConsumer(IConfiguration configuration,
-            IServiceProvider serviceProvider, string exchange, string queue)
+            IServiceProvider serviceProvider, ILogger<RabbitMqConsumer> logger, string exchange, string queue)
         {
             _serviceProvider = serviceProvider;
             _connectionUri = configuration["Integrations:AMQP:Rabbit:Connection"];
             _queue = queue;
             _exchange = exchange;
+            _logger = logger;
         }
 
         private async Task InitializeExchange()
@@ -71,11 +73,11 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 await InitializeQueue(cancellationToken);
 
-                Console.WriteLine("RabbitMQ connected and queue declared.");
+                _logger.LogInformation("RabbitMQ connected and queue declared.");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Failed to connect to RabbitMQ: {ex.Message}");
+                _logger.LogError($"Failed to connect to RabbitMQ: {ex.Message}");
                 throw;
             }
         }
@@ -103,7 +105,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 cancellationToken: stoppingToken
             );
 
-            Console.WriteLine("RabbitMQ Consumer started.");
+            _logger.LogInformation("RabbitMQ Consumer started.");
             await Task.Delay(Timeout.Infinite, stoppingToken);
         }
 
@@ -111,7 +113,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
         public override async Task StopAsync(CancellationToken cancellationToken)
         {
-            Console.WriteLine("RabbitMQ Consumer stopping...");
+            _logger.LogInformation("RabbitMQ Consumer stopping...");
 
             if (_channel != null)
             {

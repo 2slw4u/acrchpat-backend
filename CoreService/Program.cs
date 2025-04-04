@@ -99,6 +99,7 @@ builder.Services.AddSingleton<IUserParametersCache, UserParametersCache>();
 
 builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
 builder.Services.AddHostedService<UserBansConsumer>();
+builder.Services.AddHostedService<TransactionRequestConsumer>();
 
 builder.Services.AddMemoryCache();
 

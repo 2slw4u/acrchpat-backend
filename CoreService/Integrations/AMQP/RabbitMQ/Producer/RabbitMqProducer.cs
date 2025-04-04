@@ -33,11 +33,11 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
         }
         private async Task InitializeTransactionResultExchage(IConfiguration configuration)
         {
-            var transactionResultExchange = $"{configuration["Integrations:AMQP:Rabbit:Exchange:TransactionResultExchange:Name"]}";
+            var transactionResultExchange = $"{configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionResultExchange:Name"]}";
             await _channel.ExchangeDeclareAsync(
                 exchange: transactionResultExchange,
                 type: ExchangeType.Fanout,
-                durable: false
+                durable: true
             );
             _exchanges.Add("TransactionResult", transactionResultExchange);
         }
