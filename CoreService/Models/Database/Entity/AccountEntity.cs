@@ -15,6 +15,8 @@ namespace CoreService.Models.Database.Entity
         [MaxLength(100)]
         public string Name { get; set; }
         [Required]
+        public string Number { get; set; }
+        [Required]
         [DefaultValue(0)]
         public double Balance { get; set; }
         [Required]

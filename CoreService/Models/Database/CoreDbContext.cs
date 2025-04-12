@@ -12,6 +12,10 @@ namespace CoreService.Models.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AccountEntity>()
+                .HasIndex(a => a.Number)
+                .IsUnique();
+
             modelBuilder.Entity<AccountEntity>().HasData(
                 new AccountEntity()
                 {
@@ -22,7 +26,8 @@ namespace CoreService.Models.Database
                     Type = Enum.AccountType.BankMasterAccount,
                     Status = Enum.AccountStatus.Opened,
                     Currency = Enum.CurrencyISO.RUB,
-                    CreatedAt = DateTime.MinValue
+                    CreatedAt = DateTime.MinValue,
+                    Number = "1"
                 }
                 );
         }

@@ -29,6 +29,10 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.Type,
                     opt => opt.MapFrom(src => AccountType.UserCreditAccount)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.Ignore()
                 );
 
             CreateMap<AccountEntity, AccountDTO>()
@@ -51,6 +55,10 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.Currency,
                     opt => opt.MapFrom(opt => opt.Currency)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.MapFrom(opt => opt.Number)
                 );
 
             CreateMap<AccountEntity, DetailedAccountDTO>()
@@ -81,6 +89,10 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.Currency,
                     opt => opt.MapFrom(opt => opt.Currency)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.MapFrom(opt => opt.Number)
                 );
         }
     }

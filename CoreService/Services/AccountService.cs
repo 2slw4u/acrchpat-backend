@@ -74,7 +74,19 @@ namespace CoreService.Services
         public async Task<OpenNewAccountResponse> OpenNewAccount(HttpContext httpContext, OpenNewAccountRequest request)
         {
             var userId = ContextDataHelper.GetUserId(httpContext);
-            var account = _mapper.Map<AccountEntity>(request.NewAccount);
+            var accountNumbers = await _dbContext.Accounts.Select(x => x.Number).ToListAsync();
+            Random random = new Random();
+            int newAccountNumber = random.Next(20000, 10000000);
+            while (accountNumbers.Contains(newAccountNumber.ToString()))
+            {
+                random = new Random();
+                newAccountNumber = random.Next(20000, 10000000);
+            }
+            var account = _mapper.Map<AccountEntity>(request.NewAccount, opt => 
+                opt.AfterMap((src, dest) =>
+                {
+                    dest.Number = newAccountNumber.ToString();
+                }));
             account.UserId = userId;
             await _dbContext.Accounts.AddAsync(account);
             await _dbContext.SaveChangesAsync();

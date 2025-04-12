@@ -113,7 +113,7 @@ namespace CoreService.Services
         {
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = await _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefaultAsync();
-            var destinationAccount = await _dbContext.Accounts.Where(x => x.Id == request.DestinationAccountId).FirstOrDefaultAsync();
+            var destinationAccount = await _dbContext.Accounts.Where(x => x.Number == request.DestinationAccountNumber).FirstOrDefaultAsync();
             if (account == null || destinationAccount == null) {  throw new AccountNotFound(); }
             if (account.UserId != userId)
             {
