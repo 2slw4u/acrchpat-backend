@@ -11,7 +11,7 @@ namespace UserService.Models.Entities
 		[MinLength(1)]
 		public required string FullName { get; set; }
 
-		public ICollection<BanEntity> Bans { get; set; } = [];
+		public ICollection<BanEntity> Bans { get; set; } = new List<BanEntity>();
 
 		[Required]
 		[MinLength(1)]

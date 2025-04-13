@@ -1,7 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using UserService.Database;
 using UserService.Models.DTOs;
 using UserService.Models.Entities;
+using UserService.Models.Exceptions;
 using UserService.Services.Interfaces;
 
 namespace UserService.Services
@@ -10,12 +12,10 @@ namespace UserService.Services
 	{
 
 		private readonly AppDbContext _context;
-		private readonly ILogger<RolesService> _logger;
 
-		public RolesService(AppDbContext context, ILogger<RolesService> logger)
+		public RolesService(AppDbContext context)
 		{
 			_context = context;
-			_logger = logger;
 		}
 
 		public async Task<List<RoleDto>> GetRoles()

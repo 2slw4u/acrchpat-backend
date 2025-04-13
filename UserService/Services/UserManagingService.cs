@@ -11,7 +11,6 @@ namespace UserService.Services
 	public class UserManagingService : IUserManagingService
 	{
 		private readonly AppDbContext _context;
-		private readonly ILogger<UserManagingService> _logger;
 		private readonly IAuthenticationService _authenticationService;
 		private readonly IRolesService _rolesService;
 		private readonly UserManager<UserEntity> _userManager;
@@ -24,7 +23,6 @@ namespace UserService.Services
 			UserManager<UserEntity> userManager)
 		{
 			_context = context;
-			_logger = logger;
 			_authenticationService = authenticationService;
 			_rolesService = rolesService;
 			_userManager = userManager;
@@ -41,27 +39,22 @@ namespace UserService.Services
 			return response;
 		}
 
-		public async Task<AuthenticationResponse> CreateUser(UserCreateDto newUserData)
+		public async Task<UserDto> CreateUser(UserCreateDto newUserData)
 		{
-			var user = await _authenticationService.Authenticate();
-
-			if (!await IsEmployee(user))
-			{
-				throw new ForbiddenException("User isn't permitted to create new users");
-			}
+			var user = await _authenticationService.GetCurrentUser();
 
 			await ValidateUserModel(newUserData);
 
 			var newUser = await AddUserToDatabase(newUserData);
 
-			var response = _authenticationService.CreateAuthCredentials(newUser);
+			var response = new UserDto(newUser);
 
 			return response;
 		}
 
 		public async Task<AuthenticationResponse> Login(LoginDto data)
 		{
-			var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == data.Phone);
+			var user = await _context.Users.Include(u => u.Roles).FirstOrDefaultAsync(u => u.PhoneNumber == data.Phone);
 			if (user == null)
 			{
 				throw new BadRequestException("Invalid login credentials.");
@@ -80,17 +73,18 @@ namespace UserService.Services
 
 		public async Task<UserDto> GetUser()
 		{
-			var user = await _authenticationService.Authenticate();
+			var user = await _authenticationService.GetCurrentUser();
 
-			var userDto = new UserDto
-			{
-				Id = user.Id,
-				Email = user.Email,
-				FullName = user.FullName,
-				Phone = user.PhoneNumber,
-				Roles = user.Roles.Select(r => new RoleDto { Name = r.Name, Id = r.Id }).ToList(),
-				IsBanned = user.Bans.Any(b => b.BanEnd == null)
-			};
+			var userDto = new UserDto(user);
+
+			return userDto;
+		}
+
+		public async Task<UserDto> GetUserById(Guid id)
+		{
+			var user = await FullInfoById(id);
+
+			var userDto = new UserDto(user);
 
 			return userDto;
 		}
@@ -106,22 +100,74 @@ namespace UserService.Services
 
 			var users = await query.ToListAsync();
 
-			var result = users.Select(u => new UserDto
-			{
-				Id = u.Id,
-				FullName = u.FullName,
-				Email = u.Email,
-				Phone = u.PhoneNumber,
-				IsBanned = u.Bans.Any(b => b.BanEnd == null),
-				Roles = u.Roles.Select(r => new RoleDto { Id = r.Id, Name = r.Name }).ToList()
-			});
+			var result = users.Select(u => new UserDto(u));
 
 			return result.ToList();
 		}
 
-		public async Task<UserPagedListDto> SearchUser(Guid? Id, RoleEntity[]? Roles, string? Name, string? Phone, string? Email)
+		public async Task<ResponseDto> AddRole(Guid userId, Guid roleId)
+		{
+			var userEntity = await FullInfoById(userId);
+
+			var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
+			if (roleEntity == null)
+			{
+				throw new BadRequestException("Invalid role id");
+			}
+
+			if (userEntity.Roles.Any(r => r.Id == roleId))
+			{
+				throw new BadRequestException($"User with id {userId} already has role with id {roleId}");
+			}
+
+			userEntity.Roles.Add(roleEntity);
+			await _context.SaveChangesAsync();
+
+			return new ResponseDto { Message = "Role added successfully" };
+		}
+
+		public async Task<ResponseDto> RemoveRole(Guid userId, Guid roleId)
+		{
+			var userEntity = await FullInfoById(userId);
+
+			var roleEntity = await _context.Roles.FirstOrDefaultAsync(r => r.Id == roleId);
+			if (roleEntity == null)
+			{
+				throw new BadRequestException("Invalid role id");
+			}
+
+			if (!userEntity.Roles.Any(r => r.Id == roleId))
+			{
+				throw new BadRequestException($"User with id {userId} does not have role with id {roleId}");
+			}
+
+			if (userEntity.Roles.Count <= 1)
+			{
+				throw new BadRequestException("User must have at least one role");
+			}
+
+
+			userEntity.Roles.Remove(roleEntity);
+			await _context.SaveChangesAsync();
+
+			return new ResponseDto { Message = "Role removed successfully" };
+		}
+
+		public async Task<UserPagedListDto> SearchUser(Guid? Id, List<RoleEntity>? Roles, string? Name, string? Phone, string? Email)
 		{
 			throw new NotImplementedException();
+		}
+
+		public async Task<UserEntity> FullInfoById(Guid id)
+		{
+			var user = await _context.Users.Include(u => u.Roles).Include(u => u.Bans).FirstOrDefaultAsync(u => u.Id == id);
+
+			if (user == null)
+			{
+				throw new NotFoundException("Invalid user id; User not found");
+			}
+
+			return user;
 		}
 
 		private async Task<bool> IsEmployee(UserEntity user)
@@ -129,6 +175,7 @@ namespace UserService.Services
 			var employeeRole = await _rolesService.FindByName("Employee");
 			return user.Roles.Contains(employeeRole);
 		}
+
 		private async Task<UserEntity> AddUserToDatabase(UserCreateDto userDto)
 		{
 			var roles = await _context.Roles
@@ -211,5 +258,6 @@ namespace UserService.Services
 				throw new BadRequestException($"User with {fieldName} '{fieldValue}' already exists");
 			}
 		}
+
 	}
 }

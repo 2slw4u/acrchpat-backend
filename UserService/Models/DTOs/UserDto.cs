@@ -1,26 +1,36 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using UserService.Models.DTOs;
+using UserService.Models.Entities;
 
-namespace UserService.Models.DTOs
+public class UserDto
 {
-	public class UserDto
+	public UserDto() { }
+	public UserDto(UserEntity u)
 	{
-		[Required]
-		public Guid Id { get; set; }
-		[Required]
-		[MinLength(1)]
-		public required string FullName { get; set; }
-		[Required]
-		[Phone]
-		public required string Phone { get; set; }
-		[Required]
-		[EmailAddress]
-		[MinLength(1)]
-		public required string Email { get; set; }
-
-		[Required]
-		[MinLength(1)]
-		public required ICollection<RoleDto> Roles { get; set; }
-
-		public bool IsBanned { get; set; }
+		Id = u.Id;
+		FullName = u.FullName;
+		Email = u.Email;
+		Phone = u.PhoneNumber;
+		IsBanned = u.Bans.Any(b => b.BanEnd == null);
+		Roles = u.Roles.Select(r => new RoleDto { Id = r.Id, Name = r.Name }).ToList();
 	}
+
+	[Required]
+	public Guid Id { get; set; }
+	[Required]
+	[MinLength(1)]
+	public string FullName { get; set; }
+	[Phone]
+	[Required]
+	public string Phone { get; set; }
+	[EmailAddress]
+	[Required]
+	public string Email { get; set; }
+
+	[Required]
+	[MinLength(1)]
+	public ICollection<RoleDto> Roles { get; set; }
+
+	[Required]
+	public bool IsBanned { get; set; }
 }

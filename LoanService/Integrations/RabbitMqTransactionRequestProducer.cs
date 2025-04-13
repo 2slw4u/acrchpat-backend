@@ -33,7 +33,8 @@ public class RabbitMqTransactionRequestProducer : IRabbitMqTransactionRequestPro
     {
         await _channel.ExchangeDeclareAsync(
             exchange: TransactionRequestExchange,
-            type: ExchangeType.Fanout
+            type: ExchangeType.Fanout,
+            durable: true
         );
     }
 
