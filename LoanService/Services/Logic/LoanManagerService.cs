@@ -9,17 +9,16 @@ using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
 
-public class LoanManagerService(AppDbContext dbContext, IConfiguration configuration,
-    ILogger<LoanManagerService> logger,
-    IRabbitMqTransactionRequestProducer producer) : ILoanManagerService
+public class LoanManagerService(AppDbContext dbContext,
+    IRabbitMqTransactionRequestProducer producer,
+    CoreRequester coreRequester,
+    UserRequester userRequester
+    ) : ILoanManagerService
 {
-    private readonly string? _backendIp = configuration["Backend:VpaIp"];
-    
     public async Task<LoanPreviewDto> CalculateLoan(double givenMoney, int termDays, Guid rateId)
     {
         var rate = await dbContext.Rates
@@ -39,7 +38,7 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         };
     }
 
-    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles, string token)
+    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles)
     {
         var deadlineTime = DateTime.UtcNow.AddDays(model.TermDays);
         
@@ -90,10 +89,10 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         await dbContext.Loans.AddAsync(loan);
         await dbContext.SaveChangesAsync();
         
-        return await GetLoan(loan.Id, userId, roles, token);
+        return await GetLoan(loan.Id, userId, roles);
     }
 
-    public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles, string token)
+    public async Task<LoanDetailDto> GetLoan(Guid id, Guid userId, List<RoleDto> roles)
     {
         var loan = await dbContext.Loans
             .Include(l => l.Rate)
@@ -119,31 +118,12 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
         
         var totalMoneyToPay = dailyPayment * termDays;
         var moneyLeftToPay = totalMoneyToPay - dailyPayment * payedPaymentsCount;
-
-        var transactions = new List<TransactionDto>();
+        
+        var transactions = new GetTransactionsDataResponse();
 
         if (loan.Transactions.Count > 0)
         {
-            var baseUrl = $"http://{_backendIp}:5001/core/transaction?Transactions={loan.Transactions[0]}";
-            for (int i = 1; i < loan.Transactions.Count; i++)
-            {
-                baseUrl += $"&Transactions={loan.Transactions[i]}";
-            }
-            logger.LogInformation(baseUrl);
-            
-            HttpClient client = new();
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            
-            var transactionsResponse = await client.GetAsync(baseUrl);
-
-            if (!transactionsResponse.IsSuccessStatusCode)
-            {
-                throw new CannotAcquireException($"Cannot acquire transaction data from the Core Service: {await transactionsResponse.Content.ReadAsStringAsync()}");
-            }
-            
-            var responseBody = await transactionsResponse.Content.ReadAsStringAsync();
-            logger.LogInformation(responseBody);
-            transactions = JsonSerializer.Deserialize<GetTransactionsDataResponse>(responseBody, new JsonSerializerOptions { PropertyNameCaseInsensitive = true }).Transactions;
+            transactions = await coreRequester.GetTransactionsAsync(loan.Transactions);
         }
         
         return new LoanDetailDto
@@ -160,13 +140,14 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             DeadlineTime = loan.DeadlineTime,
             GivenMoney = loan.GivenMoney,
             Status = loan.Status,
-            Transactions = transactions,
+            Transactions = transactions.Transactions,
             TotalMoneyToPay = totalMoneyToPay,
             MoneyLeftToPay = moneyLeftToPay,
             DailyPayment = dailyPayment,
             TermDays = termDays,
             Payments = loan.Payments
-                .Select(p => new PaymentDto()
+                .OrderBy(p => p.PaymentTime)
+                .Select(p => new PaymentDto
                 {
                     Id = p.Id,
                     Amount = p.Amount,
@@ -192,6 +173,11 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             throw new AccessDeniedException($"You do not have access to the loan with ID {loanId}");
         }
 
+        if (loan.Status == LoanStatus.Closed)
+        {
+            throw new BadRequestException($"Loan {loanId} is closed and does not require additional payments");
+        }
+
         LoanPayment? payment;
 
         if (paymentId != null)
@@ -203,16 +189,23 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             {
                 throw new ResourceNotFoundException($"Loan with ID {loanId} does not have a payment with ID {paymentId}");
             }
+
+            if (payment.Status == PaymentStatus.Payed)
+            {
+                throw new BadRequestException($"Loan payment with ID {paymentId} has already been done");
+            }
         }
         else
         {
             payment = loan.Payments
-                .Where(p => p.PaymentTime > DateTime.UtcNow)
+                .Where(p => p.Status != PaymentStatus.Payed)
                 .MinBy(p => p.PaymentTime);
 
             if (payment == null)
             {
-                throw new ResourceNotFoundException($"Loan with ID {loanId} does not have any payments associated with it for some reason...");
+                loan.Status = LoanStatus.Closed;
+                await dbContext.SaveChangesAsync();
+                throw new ConflictException($"Loan {loanId} has no payments that need to be done. Now the loan is marked as closed.");
             }
         }
         
@@ -226,14 +219,20 @@ public class LoanManagerService(AppDbContext dbContext, IConfiguration configura
             AccountId = accountId
         });
 
-        return "Transaction request sent";
+        return $"Transaction request for payment {payment.Id} of loan {loan.Id} has been sent";
     }
 
     public async Task<List<LoanShortDto>> GetLoanHistory(Guid userId)
     {
+        var user = await userRequester.GetUserAsync(userId);
+        if (user.Roles.All(r => r.Name != "Client"))
+        {
+            throw new BadRequestException($"User {userId} must be a Client");
+        }
+        
         return await dbContext.Loans
             .Where(l => l.UserId == userId)
-            .Select(l => new LoanShortDto()
+            .Select(l => new LoanShortDto
             {
                 Id = l.Id,
                 Amount = l.GivenMoney,
