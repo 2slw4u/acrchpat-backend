@@ -8,6 +8,14 @@ public class AuthorizationMiddleware(RequestDelegate next, UserRequester userReq
 {
     public async Task InvokeAsync(HttpContext context)
     {
+        var path = context.Request.Path.Value;
+        
+        if (path != null && (path.StartsWith("/swagger") || path.StartsWith("/favicon.ico")))
+        {
+            await next(context);
+            return;
+        }
+        
         try
         {
             var userData = await userRequester.GetCurrentUserAsync();
