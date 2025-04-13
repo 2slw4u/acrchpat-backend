@@ -56,17 +56,18 @@ public class Requester
         return null;
     }
 
-    public async Task<T> GetAsync<T>(string endpoint)
+    protected async Task<T> GetAsync<T>(string endpoint)
     {
         AddAuthorizationHeader();
         var url = $"{GetServiceBaseUrl()}/{endpoint}";
         var response = await HttpClient.GetAsync(url);
+        var responseText = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
         {
             throw new HttpRequestFailedException(
                 response.StatusCode,
-                $"GET {url} failed with status code {response.StatusCode}: {await response.Content.ReadAsStringAsync()}"
+                $"GET {url} failed with status code {response.StatusCode}{(responseText.Length > 0 ? ": " : "")}{responseText}"
                 );
         }
 
