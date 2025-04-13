@@ -2,7 +2,7 @@
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
 using CoreService.Models.Enum;
-using CoreService.Models.Request.Transaction;
+using CoreService.Models.Http.Request.Transaction;
 
 namespace CoreService.Helpers.Mappers
 {
@@ -80,6 +80,23 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.PerformedAt,
                     opt => opt.MapFrom(opt => DateTime.UtcNow)
+                );
+            CreateMap<TransactionRequestDTO, TransactionEntity>()
+                .ForMember(
+                    dest => dest.Id,
+                    opt => opt.MapFrom(src => Guid.NewGuid())
+                )
+                .ForMember(
+                    dest => dest.Amount,
+                    opt => opt.MapFrom(src => src.Amount)
+                )
+                .ForMember(
+                    dest => dest.Type,
+                    opt => opt.MapFrom(src => src.Type)
+                )
+                .ForMember(
+                    dest => dest.PerformedAt,
+                    opt => opt.MapFrom(src => DateTime.UtcNow)
                 );
         }
     }

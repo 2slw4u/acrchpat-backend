@@ -24,18 +24,18 @@ namespace UserService.Services
 			_logger = logger;
 		}
 
-		public async Task<UserEntity> Authenticate()
+		public async Task<UserEntity> GetCurrentUser()
 		{
 			var httpContext = _httpContextAccessor.HttpContext;
-			if (httpContext == null || httpContext.User == null)
+			if (httpContext.User?.Identity?.IsAuthenticated != true)
 			{
-				throw new UnauthorizedAccessException("Invalid token");
+				throw new UnauthorizedException("Invalid token");
 			}
 
 			var userIdClaim = httpContext.User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.NameIdentifier);
 			if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out Guid userId))
 			{
-				throw new UnauthorizedAccessException("Invalid token");
+				throw new UnauthorizedException("Invalid token");
 			}
 
 			var user = await _context.Users
@@ -45,12 +45,7 @@ namespace UserService.Services
 
 			if (user == null)
 			{
-				throw new UnauthorizedAccessException("Invalid token");
-			}
-
-			if (user.Bans.Any(b => b.BanEnd == null))
-			{
-				throw new ForbiddenException("User is banned");
+				throw new UnauthorizedException("Invalid token claims");
 			}
 
 			return user;

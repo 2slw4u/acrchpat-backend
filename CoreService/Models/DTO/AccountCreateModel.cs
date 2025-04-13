@@ -7,7 +7,5 @@ namespace CoreService.Models.DTO
     {
         [Required]
         public string Name { get; set; }
-        [Required]
-        public Guid Owner {  get; set; }
     }
 }

@@ -4,8 +4,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using System.Security.Claims;
 using System.Text;
 using UserService.Database;
+using UserService.Integrations.AMQP.RabbitMQ;
+using UserService.Integrations.AMQP.RabbitMQ.Producer;
 using UserService.Middlewares;
 using UserService.Models.Entities;
 using UserService.Services;
@@ -62,13 +65,14 @@ builder.Services.AddAuthentication(options =>
 		ValidateIssuerSigningKey = true,
 		ValidIssuer = builder.Configuration["Jwt:Issuer"],
 		ValidAudience = builder.Configuration["Jwt:Audience"],
-		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]))
+		IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
+		RoleClaimType = ClaimTypes.Role
 	};
 });
 
 builder.Services.AddSwaggerGen(option =>
 {
-	option.SwaggerDoc("v1", new OpenApiInfo { Title = "Hospital", Version = "1.0" });
+	option.SwaggerDoc("v1", new OpenApiInfo { Title = "User API", Version = "1.0" });
 	option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
 	{
 		In = ParameterLocation.Header,
@@ -98,8 +102,9 @@ builder.Services.AddScoped<IUserManagingService, UserManagingService>();
 builder.Services.AddScoped<IRolesService, RolesService>();
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
+builder.Services.AddScoped<UserBanStatusMessager>();
 builder.Services.AddScoped<IBanService, BanService>();
-//builder.Services.AddSingleton<AuthenticationServiceFactory>();
+builder.Services.AddSingleton<IRabbitMqProducerService, RabbitMqProducerService>();
 
 var app = builder.Build();
 
@@ -114,13 +119,15 @@ catch (Exception ex)
 	Console.WriteLine(ex);
 }
 
+app.UseExceptionMiddleware();
+
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-app.UseExceptionMiddleware();
-
+app.UseAuthentication();
+app.UseAuthorizationMiddleware();
 app.UseAuthorization();
 
 app.MapControllers();
