@@ -7,7 +7,7 @@ public class UserRequester : Requester
     protected override string ServiceName => "UserService";
     private const string UserControllerName = "user";
 
-    public UserRequester(IConfiguration configuration, IHttpClientFactory httpClientFactory, HttpContextAccessor httpContextAccessor)
+    public UserRequester(IConfiguration configuration, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
         : base(configuration, httpClientFactory, httpContextAccessor)
     {
     }
