@@ -1,6 +1,4 @@
-﻿using System.Net.Http.Headers;
-using System.Text.Json;
-using LoanService.Database;
+﻿using LoanService.Database;
 using LoanService.Database.TableModels;
 using LoanService.Exceptions;
 using LoanService.Integrations;
