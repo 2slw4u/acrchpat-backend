@@ -7,7 +7,8 @@ public class CoreRequester : Requester
     protected override string ServiceName => "CoreService";
     private const string TransactionControllerName = "transaction";
     
-    public CoreRequester(IConfiguration configuration, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+    public CoreRequester(IConfiguration configuration, IHttpClientFactory httpClientFactory,
+        IHttpContextAccessor httpContextAccessor)
         : base(configuration, httpClientFactory, httpContextAccessor)
     {
     }
