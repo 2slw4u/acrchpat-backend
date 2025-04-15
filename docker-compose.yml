@@ -80,7 +80,7 @@ services:
     ports:
       - "5436:5432"
     volumes:
-      - postgres_user_data:/var/lib/postgresql/data
+      - postgres_pref_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "prefdb"]
       interval: 5s
