@@ -77,4 +77,18 @@ public class PreferenceController(IPreferenceManager preferenceManager) : Contro
         await preferenceManager.UnhideAccounts(userId, accounts);
         return Ok();
     }
+    
+    /// <response code="200">Настройки сброшены</response>
+    /// <response code="500">Ошибка сервера</response>
+    [HttpDelete("clear-preference")]
+    [EndpointSummary("Сбросить настройки")]
+    [Authorize]
+    [ProducesResponseType(200)]
+    [ProducesResponseType(typeof(ResponseModel), 500)]
+    public async Task<IActionResult> ClearPreference()
+    {
+        var userId = (Guid)HttpContext.Items["UserId"];
+        await preferenceManager.ClearPreference(userId);
+        return Ok();
+    }
 }

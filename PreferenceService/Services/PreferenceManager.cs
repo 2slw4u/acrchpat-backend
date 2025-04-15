@@ -111,4 +111,20 @@ public class PreferenceManager(AppDbContext dbContext) : IPreferenceManager
             await dbContext.SaveChangesAsync();
         }
     }
+
+    public async Task ClearPreference(Guid userId)
+    {
+        var preference = await dbContext.Preferences
+            .FirstOrDefaultAsync(p => p.UserId == userId);
+        
+        if (preference != null)
+        {
+            dbContext.Remove(preference);
+        }
+        
+        if (dbContext.ChangeTracker.HasChanges())
+        {
+            await dbContext.SaveChangesAsync();
+        }
+    }
 }

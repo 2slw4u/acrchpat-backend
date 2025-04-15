@@ -13,4 +13,6 @@ public interface IPreferenceManager
     Task HideAccounts(Guid userId, List<Guid> accountsToHide);
 
     Task UnhideAccounts(Guid userId, List<Guid> accountsToUnhide);
+
+    Task ClearPreference(Guid userId);
 }
