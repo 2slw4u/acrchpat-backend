@@ -3,6 +3,7 @@ using LoanService.Services.Interfaces;
 using LoanService.Services.Logic;
 using Microsoft.EntityFrameworkCore;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
