@@ -6,5 +6,5 @@ public class RateDto
     
     public string Name { get; set; }
     
-    public float Rate { get; set; }
+    public double YearlyRate { get; set; }
 }

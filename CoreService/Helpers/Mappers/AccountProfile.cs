@@ -18,10 +18,6 @@ namespace CoreService.Helpers.Mappers
                     opt => opt.MapFrom(src => $"{src.Name}")
                 )
                 .ForMember(
-                    dest => dest.UserId,
-                    opt => opt.MapFrom(src => src.Owner)
-                )
-                .ForMember(
                     dest => dest.CreatedAt,
                     opt => opt.MapFrom(src => DateTime.UtcNow)
                 );

@@ -1,8 +1,10 @@
 ﻿using AutoMapper;
 using CoreService.Models.Database;
+using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
-using CoreService.Models.Request.Support;
-using CoreService.Models.Response.Support;
+using CoreService.Models.Exceptions;
+using CoreService.Models.Http.Request.Support;
+using CoreService.Models.Http.Response.Support;
 using CoreService.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,31 +23,27 @@ namespace CoreService.Services
 
         public async Task ChangeClientAccountStatus(HttpContext httpContext, ChangeClientAccountStatusRequest request)
         {
-            throw new NotImplementedException();
+            throw new OperationNotNeeded();
         }
 
         public async Task<GetClientAccountDetailsResponse> GetClientAccountDetails(HttpContext httpContext, GetClientAccountDetailsRequest request)
         {
-            throw new NotImplementedException();
+            throw new OperationNotNeeded();
         }
 
         public async Task<GetClientAccountsResponse> GetClientAccounts(HttpContext httpContext, GetClientAccountsRequest request)
         {
-            if (request.Users.Count == 0)
-            {
-                throw new BadHttpRequestException("No users specified", 422);
-            }
-            var accounts = await _dbContext.Accounts.Where(x => request.Users.Contains(x.Id)).ToListAsync();
+            var accounts = await _dbContext.Accounts.Where(x => request.Users.Contains(x.UserId)).ToListAsync();
             return new GetClientAccountsResponse
             {
                 Accounts = accounts.Select(x => _mapper.Map<DetailedAccountDTO>(x)).ToList()
             };
         }
 
-        public async Task<GetClientTransactionHistoryResponse> GetClientTransactionHistory(HttpContext httpContext, GetClientTransactionHistoryRequest request)
+        public async Task<GetAccountTransactionHistoryResponse> GetAccountTransactionHistory(HttpContext httpContext, GetAccountTransactionHistoryRequest request)
         {
-            var transactions = await _dbContext.Accounts.Where(x => x.Id == request.userId).ToListAsync();
-            return new GetClientTransactionHistoryResponse
+            var transactions = await _dbContext.Transactions.Where(x => x.Account.Id == request.accountId).ToListAsync();
+            return new GetAccountTransactionHistoryResponse
             {
                 Transactions = transactions.Select(x => _mapper.Map<DetailedTransactionDTO>(x)).ToList()
             };

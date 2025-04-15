@@ -2,7 +2,7 @@
 
 public class LoanPreviewDto
 {
-    public float totalAmount { get; set; }
+    public double TotalAmount { get; set; }
     
-    public float monthlyPayment { get; set; }
+    public double DailyPayment { get; set; }
 }
