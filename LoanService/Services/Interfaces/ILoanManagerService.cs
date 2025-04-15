@@ -15,6 +15,8 @@ public interface ILoanManagerService
 
     Task<List<LoanShortDto>> GetLoanHistory(Guid userId);
 
+    Task<float> CalculateLoanRating(Guid userId);
+
     Task AddTransaction(Guid loanId, Guid transactionId, Guid? paymentId);
 
     Task MarkPaymentAsOverdue(Guid loanId, Guid paymentId);
