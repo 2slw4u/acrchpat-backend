@@ -92,7 +92,7 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "https://localhost:7109";
+        options.Authority = "https://51.250.46.120:5003";
         options.Audience = "api1";
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
