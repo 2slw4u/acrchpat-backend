@@ -69,6 +69,24 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres-pref:
+    image: postgres:17
+    container_name: postgres_pref_db
+    restart: always
+    environment:
+      POSTGRES_USER: prefuser
+      POSTGRES_PASSWORD: prefpassword
+      POSTGRES_DB: prefdb
+    ports:
+      - "5435:5432"
+    volumes:
+      - postgres_user_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "prefdb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   coreservice:
     build:
       context: ./CoreService
@@ -111,7 +129,22 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-user;Port=5432;Database=userdb;Username=useruser;Password=userpassword
 
+  prefservice:
+    build:
+      context: ./PreferenceService
+    depends_on:
+      postgres-pref:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5004:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres-pref;Port=5432;Database=prefdb;Username=prefuser;Password=prefpassword
+
 volumes:
   postgres_core_data:
   postgres_loan_data:
   postgres_user_data:
+  postgres_pref_data:
