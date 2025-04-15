@@ -60,6 +60,17 @@ builder.Services.AddIdentityServer(options =>
     options.UserInteraction.LoginReturnUrlParameter = "returnUrl";
 })
     .AddAspNetIdentity<UserEntity>()
+    .AddInMemoryApiResources(new List<ApiResource>
+    {
+        new ApiResource("api1", "My API")
+        {
+            Scopes = { "api1" }
+        }
+    })
+    .AddInMemoryApiScopes(new List<ApiScope>
+    {
+        new ApiScope("api1", "My API")
+    })
     .AddInMemoryClients(new List<Client>
     {
         new Client
@@ -79,10 +90,6 @@ builder.Services.AddIdentityServer(options =>
         new IdentityResources.OpenId(),
         new IdentityResources.Profile()
     })
-    .AddInMemoryApiScopes(new List<ApiScope>
-    {
-        new ApiScope("api1", "My API")
-    })
     .AddDeveloperSigningCredential();
 
 builder.Services.AddAuthentication(options =>
@@ -93,7 +100,8 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer("Bearer", options =>
     {
         options.Authority = "https://localhost:7109";
-        options.Audience = "api1";
+        options.MetadataAddress = "https://localhost:7109/.well-known/openid-configuration";
+        options.Audience = builder.Configuration["Jwt:Audience"];
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -103,22 +111,8 @@ builder.Services.AddAuthentication(options =>
             ValidateIssuerSigningKey = true,
             ValidIssuer = builder.Configuration["Jwt:Issuer"],
             ValidAudience = builder.Configuration["Jwt:Audience"],
-            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"])),
             RoleClaimType = ClaimTypes.Role
         };
-        options.Configuration = new OpenIdConnectConfiguration();
-    })
-    .AddCookie()
-    .AddOpenIdConnect(options =>
-    {
-        options.Authority = "https://localhost:5173";
-        options.ClientId = "client_app";
-        options.ResponseType = "code";
-        options.RequireHttpsMetadata = false;
-        options.Scope.Add("openid");
-        options.Scope.Add("profile");
-        options.Scope.Add("api1");
-        options.SaveTokens = true;
     });
 
 
