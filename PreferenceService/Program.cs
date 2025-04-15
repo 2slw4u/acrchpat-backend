@@ -1,15 +1,12 @@
 using System.Text;
-using LoanService.Database;
-using LoanService.Integrations;
-using LoanService.Middleware;
-using LoanService.Services;
-using LoanService.Services.Interfaces;
-using LoanService.Services.Logic;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using PreferenceService.Database;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using PreferenceService.Integrations;
+using PreferenceService.Middleware;
+using PreferenceService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -51,7 +48,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddSwaggerGen(option =>
 {
-    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Loan API", Version = "1.0" });
+    option.SwaggerDoc("v1", new OpenApiInfo { Title = "Preference API", Version = "1.0" });
     option.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         In = ParameterLocation.Header,
@@ -76,19 +73,12 @@ builder.Services.AddSwaggerGen(option =>
         }
     });
 });
-
 if (!builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
 }
-
-builder.Services.AddScoped<IRateService, RateService>();
-builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
-builder.Services.AddSingleton<IRabbitMqTransactionRequestProducer, RabbitMqTransactionRequestProducer>();
+builder.Services.AddScoped<IPreferenceManager, PreferenceManager>();
 builder.Services.AddScoped<UserRequester>();
-builder.Services.AddScoped<CoreRequester>();
-builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
-builder.Services.AddHostedService<LoanAutopaymentProcessor>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
