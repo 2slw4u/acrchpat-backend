@@ -112,7 +112,7 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
         return Ok(await loanService.PayLoan(userId, id, paymentId, accountId));
     }
     
-    /// <response code="200">Часть кредита оплачена</response>
+    /// <response code="200">Ваша кредитная история получена</response>
     /// <response code="400">Неверные входные данные</response>
     /// <response code="401">Неавторизован</response>
     /// <response code="403">Нет полномочий</response>
@@ -133,7 +133,7 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
         return Ok(await loanService.GetLoanHistory(userId));
     }
     
-    /// <response code="200">Часть кредита оплачена</response>
+    /// <response code="200">Кредитная история получена</response>
     /// <response code="400">Неверные входные данные</response>
     /// <response code="401">Неавторизован</response>
     /// <response code="403">Нет полномочий</response>
@@ -152,5 +152,43 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     public async Task<IActionResult> GetLoanHistory([FromQuery][Required] Guid userId)
     {
         return Ok(await loanService.GetLoanHistory(userId));
+    }
+    
+    /// <response code="200">Ваш кредитный рейтинг получен</response>
+    /// <response code="401">Неавторизован</response>
+    /// <response code="403">Нет полномочий</response>
+    /// <response code="404">Данные не найдены</response>
+    /// <response code="500">Ошибка сервера</response>
+    [HttpGet("my-rating")]
+    [EndpointSummary("Получить свой кредитный рейтинг")]
+    [Authorize]
+    [RoleAuthorize("Client")]
+    [ProducesResponseType(typeof(float), 200)]
+    [ProducesResponseType(typeof(ResponseModel), 401)]
+    [ProducesResponseType(typeof(ResponseModel), 403)]
+    [ProducesResponseType(typeof(ResponseModel), 500)]
+    public async Task<IActionResult> CalculateMyLoanRating()
+    {
+        var userId = (Guid)HttpContext.Items["UserId"];
+        return Ok(await loanService.CalculateLoanRating(userId));
+    }
+    
+    /// <response code="200">Ваш кредитный рейтинг получен</response>
+    /// <response code="400">Неверные входные данные</response>
+    /// <response code="401">Неавторизован</response>
+    /// <response code="403">Нет полномочий</response>
+    /// <response code="500">Ошибка сервера</response>
+    [HttpGet("rating")]
+    [EndpointSummary("Получить кредитный рейтинг")]
+    [Authorize]
+    [RoleAuthorize("Employee")]
+    [ProducesResponseType(typeof(float), 200)]
+    [ProducesResponseType(typeof(ResponseModel), 400)]
+    [ProducesResponseType(typeof(ResponseModel), 401)]
+    [ProducesResponseType(typeof(ResponseModel), 403)]
+    [ProducesResponseType(typeof(ResponseModel), 500)]
+    public async Task<IActionResult> CalculateLoanRating([Required] Guid userId)
+    {
+        return Ok(await loanService.CalculateLoanRating(userId));
     }
 }

@@ -241,6 +241,29 @@ public class LoanManagerService(AppDbContext dbContext,
             .ToListAsync();
     }
 
+    public async Task<float> CalculateLoanRating(Guid userId)
+    {
+        var user = await userRequester.GetUserAsync(userId);
+        if (user.Roles.All(r => r.Name != "Client"))
+        {
+            throw new BadRequestException($"User {userId} must be a Client");
+        }
+        
+        var loans = await dbContext.Loans
+            .Where(l => l.UserId == userId)
+            .ToListAsync();
+        
+        if (loans.Count == 0)
+            return 1f;
+        
+        var closedLoans = loans.Count(l => l.Status == LoanStatus.Closed);
+        var overdueLoans = loans.Count(l => l.Status == LoanStatus.Overdue);
+        var openLoans = loans.Count(l => l.Status == LoanStatus.Open);
+        
+        var score = closedLoans * 1.0f + openLoans * 0.5f - overdueLoans * 1.0f;
+        return score / loans.Count;
+    }
+
     public async Task AddTransaction(Guid loanId, Guid transactionId, Guid? paymentId)
     {
         var loan = await dbContext.Loans

@@ -7,27 +7,27 @@ namespace LoanService.Integrations;
 
 public class Requester
 {
-    protected readonly IConfiguration Configuration;
-    protected readonly HttpClient HttpClient;
-    protected readonly IHttpContextAccessor HttpContextAccessor;
-    protected readonly string? BackendIp;
+    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly string? _backendIp;
 
     protected virtual string ServiceName => "Dummy";
 
-    public Requester(IConfiguration configuration, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
+    protected Requester(IConfiguration configuration, IHttpClientFactory httpClientFactory, IHttpContextAccessor httpContextAccessor)
     {
-        Configuration = configuration;
-        HttpClient = httpClientFactory.CreateClient();
-        BackendIp = configuration["Backend:VpaIp"];
-        HttpContextAccessor = httpContextAccessor;
+        _configuration = configuration;
+        _httpClient = httpClientFactory.CreateClient();
+        _backendIp = configuration["Backend:VpaIp"];
+        _httpContextAccessor = httpContextAccessor;
     }
 
     private string GetServiceBaseUrl()
     {
-        var port = Configuration[$"Services:{ServiceName}:Port"];
-        var endpointPrefix = Configuration[$"Services:{ServiceName}:EndpointPrefix"];
+        var port = _configuration[$"Services:{ServiceName}:Port"];
+        var endpointPrefix = _configuration[$"Services:{ServiceName}:EndpointPrefix"];
 
-        var url = $"http://{BackendIp}:{port}/{endpointPrefix}";
+        var url = $"http://{_backendIp}:{port}/{endpointPrefix}";
         if (string.IsNullOrWhiteSpace(url))
         {
             throw new InvalidOperationException($"Base URL for service '{ServiceName}' is not configured.");
@@ -39,14 +39,14 @@ public class Requester
     {
         token ??= GetAccessTokenFromContext();
 
-        HttpClient.DefaultRequestHeaders.Authorization = token != null
+        _httpClient.DefaultRequestHeaders.Authorization = token != null
             ? new AuthenticationHeaderValue("Bearer", token)
             : null;
     }
     
     private string? GetAccessTokenFromContext()
     {
-        var authHeader = HttpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
+        var authHeader = _httpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
 
         if (!string.IsNullOrWhiteSpace(authHeader) && authHeader.StartsWith("Bearer "))
         {
@@ -60,7 +60,7 @@ public class Requester
     {
         AddAuthorizationHeader();
         var url = $"{GetServiceBaseUrl()}/{endpoint}";
-        var response = await HttpClient.GetAsync(url);
+        var response = await _httpClient.GetAsync(url);
         var responseText = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
