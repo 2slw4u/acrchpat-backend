@@ -100,7 +100,7 @@ builder.Services.AddAuthentication(options =>
     .AddJwtBearer("Bearer", options =>
     {
         options.Authority = "https://51.250.46.120:5003";
-        options.MetadataAddress = "https://localhost:7109/.well-known/openid-configuration";
+        options.MetadataAddress = "https://51.250.46.120:5003/.well-known/openid-configuration";
         options.Audience = builder.Configuration["Jwt:Audience"];
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
