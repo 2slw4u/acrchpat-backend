@@ -56,7 +56,6 @@ builder.Services.AddIdentity<UserEntity, RoleEntity>(options =>
 
 builder.Services.AddIdentityServer(options =>
 {
-    options.PublicOrigin = "https://51.250.46.120:5003";
     options.UserInteraction.LoginUrl = "/Account/Login";
     options.UserInteraction.LoginReturnUrlParameter = "returnUrl";
 })
