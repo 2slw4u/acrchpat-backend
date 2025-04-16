@@ -18,6 +18,7 @@ public class Requester
     {
         _configuration = configuration;
         _httpClient = httpClientFactory.CreateClient();
+        //_httpClient = httpClientFactory.CreateClient("ResilientClient");
         _backendIp = configuration["Backend:VpaIp"];
         _httpContextAccessor = httpContextAccessor;
     }
