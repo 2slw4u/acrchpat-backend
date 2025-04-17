@@ -18,6 +18,7 @@ using Duende.IdentityServer.Models;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
+using Duende.IdentityServer;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -99,8 +100,8 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer("Bearer", options =>
     {
-        options.Authority = "https://51.250.46.120:5003";
-        options.MetadataAddress = "https://51.250.46.120:5003/.well-known/openid-configuration";
+        options.Authority = "http://51.250.46.120:5003";
+        options.MetadataAddress = "http://51.250.46.120:5003/.well-known/openid-configuration";
         options.Audience = builder.Configuration["Jwt:Audience"];
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
@@ -119,10 +120,17 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.ConfigureApplicationCookie(options =>
 {
-    options.LoginPath = "/Account/Login";
-    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
-    options.Cookie.SameSite = SameSiteMode.None;
+	options.Cookie.SameSite = SameSiteMode.Lax;
+	options.Cookie.SecurePolicy = CookieSecurePolicy.None;
+	options.LoginPath = "/Account/Login";
 });
+builder.Services.Configure<CookieAuthenticationOptions>(
+	IdentityServerConstants.DefaultCookieAuthenticationScheme,
+	opts =>
+	{
+		opts.Cookie.SameSite = SameSiteMode.Lax;
+		opts.Cookie.SecurePolicy = CookieSecurePolicy.None;
+	});
 
 
 builder.Services.AddSwaggerGen(option =>
