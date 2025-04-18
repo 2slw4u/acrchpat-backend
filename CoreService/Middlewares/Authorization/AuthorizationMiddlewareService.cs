@@ -52,8 +52,11 @@ namespace CoreService.Middlewares.Authorization
 
             var jwt = handler.ReadJwtToken(token);
             
-            //var loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone);
-            var loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == "sub");
+            var loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone);
+            if (loginClaim == null)
+            {
+                loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == "sub");
+            }
 
             if (loginClaim == null || string.IsNullOrWhiteSpace(loginClaim.Value))
             {
