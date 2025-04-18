@@ -27,18 +27,41 @@ namespace CoreService.Middlewares.Authorization
             _userService = userService;
             _mapper = mapper;
         }
+        // private string ExtractUserLogin(string token)
+        // {
+        //     var decipheredToken = new JwtSecurityToken(token);
+        //     var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault().ToString();
+        //     Regex regex = new Regex(@"(.*(mobilephone\:\s))");
+        //     login = regex.Replace(login, "");
+        //     Console.WriteLine($"phone in claims: {login}");
+        //     if (login == null)
+        //     {
+        //         throw new TokenClaimsUnprocessable();
+        //     }
+        //     return login.ToString();
+        // }
+        
         private string ExtractUserLogin(string token)
         {
-            var decipheredToken = new JwtSecurityToken(token);
-            var login = decipheredToken.Claims.Where(x => x.Type == ClaimTypes.MobilePhone).FirstOrDefault().ToString();
-            Regex regex = new Regex(@"(.*(mobilephone\:\s))");
-            login = regex.Replace(login, "");
-            Console.WriteLine($"phone in claims: {login}");
-            if (login == null)
+            var handler = new JwtSecurityTokenHandler();
+
+            if (!handler.CanReadToken(token))
             {
                 throw new TokenClaimsUnprocessable();
             }
-            return login.ToString();
+
+            var jwt = handler.ReadJwtToken(token);
+            
+            var loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone);
+
+            if (loginClaim == null || string.IsNullOrWhiteSpace(loginClaim.Value))
+            {
+                throw new TokenClaimsUnprocessable();
+            }
+
+            Console.WriteLine($"[Authorization] phone in claims: {loginClaim.Value}");
+
+            return loginClaim.Value;
         }
 
         public async Task InvokeAsync(HttpContext httpContext)
