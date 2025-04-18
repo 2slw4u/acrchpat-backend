@@ -31,18 +31,9 @@ public class Requester
         {
             throw new InvalidOperationException($"Base URL for service '{ServiceName}' is not configured.");
         }
-        return url;
+        return url.TrimEnd('/');
     }
 
-    private void AddAuthorizationHeader(string? token = null)
-    {
-        token ??= GetAccessTokenFromContext();
-
-        HttpClient.DefaultRequestHeaders.Authorization = token != null
-            ? new AuthenticationHeaderValue("Bearer", token)
-            : null;
-    }
-    
     private string? GetAccessTokenFromContext()
     {
         var authHeader = HttpContextAccessor.HttpContext?.Request.Headers["Authorization"].ToString();
@@ -57,9 +48,17 @@ public class Requester
 
     protected async Task<T> GetAsync<T>(string endpoint)
     {
-        AddAuthorizationHeader();
-        var url = $"{GetServiceBaseUrl()}/{endpoint}";
-        var response = await HttpClient.GetAsync(url);
+        var token = GetAccessTokenFromContext();
+        var url = $"{GetServiceBaseUrl()}/{endpoint.TrimStart('/')}";
+
+        using var request = new HttpRequestMessage(HttpMethod.Get, url);
+
+        if (!string.IsNullOrWhiteSpace(token))
+        {
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+
+        var response = await HttpClient.SendAsync(request);
         var responseText = await response.Content.ReadAsStringAsync();
 
         if (!response.IsSuccessStatusCode)
@@ -67,11 +66,10 @@ public class Requester
             throw new HttpRequestFailedException(
                 response.StatusCode,
                 $"GET {url} failed with status code {response.StatusCode}{(responseText.Length > 0 ? ": " : "")}{responseText}"
-                );
+            );
         }
 
-        var content = await response.Content.ReadAsStringAsync();
-        return JsonSerializer.Deserialize<T>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+        return JsonSerializer.Deserialize<T>(responseText, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                ?? throw new JsonException("Failed to deserialize response");
     }
 }
