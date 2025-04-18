@@ -102,10 +102,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseCors("AllowAll");
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseExceptionMiddleware();
 app.UseAuthorization();
