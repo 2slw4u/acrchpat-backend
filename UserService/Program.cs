@@ -72,21 +72,32 @@ builder.Services.AddIdentityServer(options =>
     {
         new ApiScope("api1", "My API")
     })
-    .AddInMemoryClients(new List<Client>
-    {
-        new Client
-        {
-            ClientId = "client_app",
-            AllowedGrantTypes = GrantTypes.Code,
-            RequireClientSecret = false,
-            RequirePkce = true,
-            RedirectUris = { "http://localhost:5173/signin-callback" },
-            PostLogoutRedirectUris = { "http://localhost:5173" },
-            AllowedCorsOrigins = { "http://localhost:5173" },
-            AllowedScopes = { "openid", "profile", "api1" }
-        }
-    })
-    .AddInMemoryIdentityResources(new List<IdentityResource>
+	.AddInMemoryClients(new List<Client>
+	{
+		new Client
+		{
+			ClientId = "client_app",
+			AllowedGrantTypes = GrantTypes.Code,
+			RequireClientSecret = false,
+			RequirePkce = true,
+			RedirectUris = { "http://localhost:5173/signin-callback" },
+			PostLogoutRedirectUris = { "http://localhost:5173" },
+			AllowedCorsOrigins = { "http://localhost:5173" },
+			AllowedScopes = { "openid", "profile", "api1" }
+		},
+		new Client
+		{
+			ClientId = "employee_app",
+			AllowedGrantTypes = GrantTypes.Code,
+			RequireClientSecret = false,
+			RequirePkce = true,
+			RedirectUris = { "http://localhost:5174/signin-callback" },
+			PostLogoutRedirectUris = { "http://localhost:51734" },
+			AllowedCorsOrigins = { "http://localhost:5174" },
+			AllowedScopes = { "openid", "profile", "api1" }
+		}
+	})
+	.AddInMemoryIdentityResources(new List<IdentityResource>
     {
         new IdentityResources.OpenId(),
         new IdentityResources.Profile()

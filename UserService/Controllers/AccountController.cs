@@ -13,6 +13,7 @@ using Microsoft.EntityFrameworkCore;
 using UserService.Database;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
+using UserService.Services.Interfaces;
 
 namespace UserService.Controllers
 {
@@ -21,6 +22,7 @@ namespace UserService.Controllers
         private readonly SignInManager<UserEntity> _signInManager;
         private readonly UserManager<UserEntity> _userManager;
         private readonly IIdentityServerInteractionService _interaction;
+        private readonly IUserManagingService _userService;
         private readonly AppDbContext _context;
         private readonly ILogger<AccountController> _logger;
 
@@ -30,11 +32,13 @@ namespace UserService.Controllers
             SignInManager<UserEntity> signInManager,
             UserManager<UserEntity> userManager,
             IIdentityServerInteractionService interaction,
+            IUserManagingService userService,
             ILogger<AccountController> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _interaction = interaction;
+            _userService = userService;
             _context = context;
             _logger = logger;
         }
@@ -90,8 +94,18 @@ namespace UserService.Controllers
             }
             _logger.LogInformation(user.Id.ToString());
 
+            if (!await _userService.IsClient(user) && model.ReturnUrl.Contains("5173"))
+            {
+				ModelState.AddModelError(string.Empty, "User is not a client");
+			}
 
-            var verificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
+			if (!await _userService.IsEmployee(user) && model.ReturnUrl.Contains("5174"))
+			{
+				ModelState.AddModelError(string.Empty, "User is not an employee");
+			}
+
+
+			var verificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
             if (verificationResult != PasswordVerificationResult.Success)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login credentials.");
