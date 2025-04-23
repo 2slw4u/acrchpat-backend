@@ -40,7 +40,7 @@ namespace UserService.Middlewares.Exceptions
 			catch (Exception ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status500InternalServerError;
-				_logger.LogError(ex.Message);
+				_logger.LogError(ex, "error!");
 				await context.Response.WriteAsJsonAsync(new { message = "500 Internal Server Error:" + ex.Message });
 			}
 		}
