@@ -11,11 +11,18 @@ namespace CoreService.Models.Database.Entity
         [Required]
         public AccountEntity Account { get; set; }
         [Required]
+        public AccountEntity? DestinationAccount { get; set; }
+        [Required]
         [Range(double.Epsilon, double.MaxValue)]
         public double Amount { get; set; }
         [Required]
         public TransactionType Type { get; set; }
         [Required]
+        [DefaultValue(CurrencyISO.RUB)]
+        public CurrencyISO Currency { get; set; }
+        [Required]
         public DateTime PerformedAt { get; set; }
+        [Required]
+        public NotificationStatus NotificationStatus { get; set; }
     }
 }
