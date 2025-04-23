@@ -14,6 +14,8 @@ using UserService.Database;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Logging;
 using UserService.Services.Interfaces;
+using Duende.IdentityServer;
+using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 
 namespace UserService.Controllers
 {
@@ -85,7 +87,7 @@ namespace UserService.Controllers
             _logger.LogInformation(model.Phone);
             _logger.LogInformation(model.Password);
 
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.PhoneNumber == model.Phone);
+            var user = await _context.Users.Include(u => u.Roles).Include(u => u.Bans).FirstOrDefaultAsync(u => u.PhoneNumber == model.Phone);
 
             if (user == null)
             {
@@ -94,18 +96,27 @@ namespace UserService.Controllers
             }
             _logger.LogInformation(user.Id.ToString());
 
-            if (!await _userService.IsClient(user) && model.ReturnUrl.Contains("5173"))
+            if (user.Bans.Any(b => b.BanEnd == null))
             {
-				ModelState.AddModelError(string.Empty, "User is not a client");
-			}
+                ModelState.AddModelError(string.Empty, "User is banned.");
+            }
 
-			if (!await _userService.IsEmployee(user) && model.ReturnUrl.Contains("5174"))
-			{
-				ModelState.AddModelError(string.Empty, "User is not an employee");
-			}
+            var isClient = await _userService.IsClient(user);
+            var isEmployee = await _userService.IsEmployee(user);
+
+            _logger.LogInformation(model.ReturnUrl, model.ReturnUrl.Contains("5174"));
+            if (!isClient && model.ReturnUrl.Contains("5173"))
+            {
+                ModelState.AddModelError(string.Empty, "User is not a client");
+            }
+
+            if (!isEmployee && model.ReturnUrl.Contains("5174"))
+            {
+                ModelState.AddModelError(string.Empty, "User is not an employee");
+            }
 
 
-			var verificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
+            var verificationResult = _userManager.PasswordHasher.VerifyHashedPassword(user, user.PasswordHash, model.Password);
             if (verificationResult != PasswordVerificationResult.Success)
             {
                 ModelState.AddModelError(string.Empty, "Invalid login credentials.");
@@ -124,7 +135,24 @@ namespace UserService.Controllers
             }
             return Redirect("~/");
         }
+
+        [HttpGet]
+        public async Task<IActionResult> Logout(string logoutId)
+        {
+            await _signInManager.SignOutAsync();
+
+            var context = await _interaction.GetLogoutContextAsync(logoutId);
+
+            return SignOut(
+                new AuthenticationProperties
+                {
+                    RedirectUri = context.PostLogoutRedirectUri
+                },
+                IdentityServerConstants.DefaultCookieAuthenticationScheme,
+                OpenIdConnectDefaults.AuthenticationScheme);
+        }
     }
+
 }
 
 
