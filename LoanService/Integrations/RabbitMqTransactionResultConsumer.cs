@@ -111,21 +111,23 @@ public class RabbitMqTransactionResultConsumer(
                 using (var scope = serviceProvider.CreateScope())
                 {
                     var loanService = scope.ServiceProvider.GetRequiredService<ILoanManagerService>();
-            
-                    if (result.Status)
+                    if (result.Type == TransactionType.LoanPayment || result.Type == TransactionType.LoanAccrual)
                     {
-                        await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
-                    }
-                    else
-                    {
-                        logger.LogError($"Transaction error: {result.ErrorMessage}");
-                        if (result.Type == TransactionType.LoanPayment)
+                        if (result.Status)
                         {
-                            await loanService.MarkPaymentAsOverdue(result.LoanId, result.PaymentId);
+                            await loanService.AddTransaction((Guid)result.LoanId, result.TransactionId, result.PaymentId);
                         }
-                        else if (result.Type == TransactionType.LoanAccrual)
+                        else
                         {
-                            await loanService.DeleteInvalidLoan(result.LoanId);
+                            logger.LogError($"Transaction error: {result.ErrorMessage}");
+                            if (result.Type == TransactionType.LoanPayment)
+                            {
+                                await loanService.MarkPaymentAsOverdue((Guid)result.LoanId, (Guid)result.PaymentId);
+                            }
+                            else if (result.Type == TransactionType.LoanAccrual)
+                            {
+                                await loanService.DeleteInvalidLoan((Guid)result.LoanId);
+                            }
                         }
                     }
                 }
