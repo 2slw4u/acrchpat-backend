@@ -12,6 +12,8 @@ using CoreService.Integrations.Http.UserService;
 using CoreService.Helpers.Cache;
 using CoreService.Integrations.AMQP.RabbitMQ.Producer;
 using CoreService.Integrations.AMQP.RabbitMQ.Consumer;
+using CoreService.Integrations.Http.UniRate;
+using CoreService.Helpers;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -98,6 +100,8 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ISupportService, SupportService>();
 
 builder.Services.AddSingleton<IUserServiceAdapter, UserServiceAdapter>();
+builder.Services.AddSingleton<IUniRateAdapter, UniRateAdapter>();
+
 builder.Services.AddSingleton<IUserParametersCache, UserParametersCache>();
 
 builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
@@ -107,6 +111,8 @@ builder.Services.AddHostedService<TransactionRequestConsumer>();
 builder.Services.AddMemoryCache();
 
 builder.Services.AddHttpContextAccessor();
+
+ConfigurationHelper.Initialize(builder.Configuration);
 
 var app = builder.Build();
 

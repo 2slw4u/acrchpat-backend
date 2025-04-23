@@ -8,5 +8,6 @@ public enum TransactionType
     Deposit,
     Withdrawal,
     LoanAccrual,
-    LoanPayment
+    LoanPayment,
+    Transfer
 }

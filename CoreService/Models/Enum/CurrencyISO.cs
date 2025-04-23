@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace CoreService.Models.Enum
 {
-    [JsonConverter(typeof(JsonStringEnumConverter<AccountStatus>))]
+    [JsonConverter(typeof(JsonStringEnumConverter<CurrencyISO>))]
     public enum CurrencyISO
     {
         [Description("Рубль")]

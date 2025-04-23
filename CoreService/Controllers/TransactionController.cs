@@ -36,9 +36,9 @@ namespace CoreService.Controllers
         [EndpointSummary("(DepositMoneyToAccount) Imitates depositing money from ATM")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task<DepositMoneyToAccountResponse> DepositMoneyToAccount(DepositMoneyToAccountRequest request)
+        public async Task DepositMoneyToAccount(DepositMoneyToAccountRequest request)
         {
-            return await _transactionService.DepositMoneyToAccount(HttpContext, request);
+            await _transactionService.DepositMoneyToAccount(HttpContext, request);
         }
 
         [HttpPost]
@@ -46,9 +46,29 @@ namespace CoreService.Controllers
         [EndpointSummary("(WithdrawMoneyFromAccount) Imitates wihdrawal money with ATM")]
         [Authorize]
         [RoleAuthorize(UserRole.Client)]
-        public async Task<WithdrawMoneyFromAccountResponse> WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
+        public async Task WithdrawMoneyFromAccount(WithdrawMoneyFromAccountRequest request)
         {
-            return await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);
+            await _transactionService.WithdrawMoneyFromAccount(HttpContext, request);
+        }
+
+        [HttpPost]
+        [Route("{accountId}/transfer")]
+        [EndpointSummary("(TransferMoneyToAccount) Transfers money from one account to another")]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
+        public async Task TransferMoneyToAccount(TransferMoneyToAccountRequest request)
+        {
+            await _transactionService.TransferMoneyToAccount(HttpContext, request);
+        }
+
+        [HttpGet]
+        [EndpointSummary("(GetTransferMoneyRates) Returns a rate for converting currency for transfers")]
+        [Route("rates")]
+        [Authorize]
+        [RoleAuthorize(UserRole.Client)]
+        public async Task<GetTransferMoneyRatesResponse> GetTransferMoneyRates(GetTransferMoneyRatesRequest request)
+        {
+            return await _transactionService.GetTransferMoneyRates(HttpContext, request);
         }
 
         [HttpGet]

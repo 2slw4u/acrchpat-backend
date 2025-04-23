@@ -3,7 +3,7 @@ using System.Text.Json.Serialization;
 
 namespace CoreService.Models.Enum
 {
-    [JsonConverter(typeof(JsonStringEnumConverter<AccountStatus>))]
+    [JsonConverter(typeof(JsonStringEnumConverter<AccountType>))]
     public enum AccountType
     {
         [Description("Мастер-счет банка")]
