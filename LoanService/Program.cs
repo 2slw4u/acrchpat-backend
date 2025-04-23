@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddCors(options =>
@@ -36,6 +37,9 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer(options =>
     {
+        options.RefreshOnIssuerKeyNotFound = true;
+        options.RequireHttpsMetadata = false;
+        options.Authority = "http://51.250.46.120:5003";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -84,8 +88,12 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.AddScoped<IRateService, RateService>();
 builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
 builder.Services.AddSingleton<IRabbitMqTransactionRequestProducer, RabbitMqTransactionRequestProducer>();
+builder.Services.AddScoped<UserRequester>();
+builder.Services.AddScoped<CoreRequester>();
 builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
 builder.Services.AddHostedService<LoanAutopaymentProcessor>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddHttpClient();
 
 var app = builder.Build();
 
@@ -104,10 +112,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseCors("AllowAll");
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseExceptionMiddleware();
 app.UseAuthorization();
