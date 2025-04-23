@@ -37,6 +37,9 @@ builder.Services.AddAuthentication(options =>
     })
     .AddJwtBearer(options =>
     {
+        options.RefreshOnIssuerKeyNotFound = true;
+        options.RequireHttpsMetadata = false;
+        options.Authority = "http://51.250.46.120:5003";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -109,10 +112,10 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+app.UseCors("AllowAll");
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
-app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 app.UseExceptionMiddleware();
 app.UseAuthorization();
