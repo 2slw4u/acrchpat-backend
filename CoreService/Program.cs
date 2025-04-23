@@ -37,6 +37,9 @@ builder.Services.AddAuthentication(options =>
 })
     .AddJwtBearer(options =>
     {
+        options.RefreshOnIssuerKeyNotFound = true;
+        options.RequireHttpsMetadata = false;
+        options.Authority = "http://51.250.46.120:5003";
         options.TokenValidationParameters = new TokenValidationParameters
         {
             ValidateIssuer = true,
@@ -99,6 +102,7 @@ builder.Services.AddSingleton<IUserParametersCache, UserParametersCache>();
 
 builder.Services.AddSingleton<IRabbitMqProducer, RabbitMqProducer>();
 builder.Services.AddHostedService<UserBansConsumer>();
+builder.Services.AddHostedService<TransactionRequestConsumer>();
 
 builder.Services.AddMemoryCache();
 

@@ -1,13 +1,16 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.ComponentModel.DataAnnotations;
 using UserService.Models.DTOs;
 using UserService.Services.Interfaces;
 
+
 namespace UserService.Controllers
 {
 	[ApiController]
-	[Route("api/user")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+    [Route("api/user")]
 	public class UserController : ControllerBase
 	{
 		private readonly IUserManagingService _userService;
@@ -18,6 +21,7 @@ namespace UserService.Controllers
 
 		[HttpPost]
 		[Route("register")]
+		[AllowAnonymous]
 		[ProducesResponseType(typeof(AuthenticationResponse), 200)]
 		public async Task<IActionResult> Register([FromBody] UserCreateDto newUser)
 		{
@@ -37,6 +41,7 @@ namespace UserService.Controllers
 
 		[HttpPost]
 		[Route("login")]
+		[AllowAnonymous]
 		[ProducesResponseType(typeof(AuthenticationResponse), 200)]
 		public async Task<IActionResult> Login([FromBody] LoginDto newUser)
 		{
@@ -46,7 +51,6 @@ namespace UserService.Controllers
 
 		[HttpGet]
 		[Route("currentUser")]
-		[Authorize]
 		[ProducesResponseType(typeof(UserDto), 200)]
 		public async Task<IActionResult> GetUser()
 		{
@@ -56,7 +60,6 @@ namespace UserService.Controllers
 
 		[HttpGet]
 		[Route("user/{userId}")]
-		[Authorize]
 		[ProducesResponseType(typeof(UserDto), 200)]
 		public async Task<IActionResult> GetUserById(Guid userId)
 		{
@@ -66,7 +69,6 @@ namespace UserService.Controllers
 
 		[HttpGet]
 		[Route("all")]
-		[Authorize]
 		[ProducesResponseType(typeof(List<UserDto>), 200)]
 		public async Task<IActionResult> GetUsers([FromQuery] Guid? roleId)
 		{

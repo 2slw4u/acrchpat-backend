@@ -25,7 +25,8 @@ public class RabbitMqTransactionResultConsumer(
     {
         await _channel.ExchangeDeclareAsync(
             exchange: TransactionResultExchange,
-            type: ExchangeType.Fanout
+            type: ExchangeType.Fanout,
+            durable: true
         );
     }
 
@@ -111,7 +112,7 @@ public class RabbitMqTransactionResultConsumer(
                 {
                     var loanService = scope.ServiceProvider.GetRequiredService<ILoanManagerService>();
             
-                    if (result.Status == TransactionResultStatus.Success)
+                    if (result.Status)
                     {
                         await loanService.AddTransaction(result.LoanId, result.TransactionId, result.PaymentId);
                     }

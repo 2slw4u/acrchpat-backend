@@ -170,7 +170,13 @@ namespace UserService.Services
 			return user;
 		}
 
-		private async Task<bool> IsEmployee(UserEntity user)
+		public async Task<bool> IsClient(UserEntity user)
+		{
+			var clientRole = await _rolesService.FindByName("Client");
+			return user.Roles.Contains(clientRole);
+		}
+
+		public async Task<bool> IsEmployee(UserEntity user)
 		{
 			var employeeRole = await _rolesService.FindByName("Employee");
 			return user.Roles.Contains(employeeRole);

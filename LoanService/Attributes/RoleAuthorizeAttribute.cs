@@ -5,13 +5,12 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace LoanService.Attributes;
 
+[AttributeUsage(AttributeTargets.Method)]
 public class RoleAuthorizeAttribute(string requiredRole) : Attribute, IAuthorizationFilter
 {
     public void OnAuthorization(AuthorizationFilterContext context)
     {
-        var roles = context.HttpContext.Items["Roles"] as List<RoleDto>;
-
-        if (roles == null || !roles.Any(r => r.Name.Equals(requiredRole, StringComparison.OrdinalIgnoreCase)))
+        if (context.HttpContext.Items["Roles"] is not List<RoleDto> roles || !roles.Any(r => r.Name.Equals(requiredRole, StringComparison.OrdinalIgnoreCase)))
         {
             context.Result = new ObjectResult(new ResponseModel
             {

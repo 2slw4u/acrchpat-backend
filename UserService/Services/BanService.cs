@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using UserService.Database;
+using UserService.Integrations.AMQP.RabbitMQ;
 using UserService.Integrations.AMQP.RabbitMQ.Producer;
 using UserService.Models.DTOs;
 using UserService.Models.Entities;
@@ -13,15 +14,15 @@ namespace UserService.Services
 		private readonly AppDbContext _context;
 		private readonly IAuthenticationService _authenticationService;
 		private readonly IUserManagingService _userManagingService;
-		private readonly IRabbitMqProducerService _rabbitMqProducerService;
+		private readonly UserBanStatusMessager _messagerService;
 		private readonly ILogger<BanService> _logger;
 
-		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger, IRabbitMqProducerService rabbitMqProducerService, IUserManagingService userManagingService)
+		public BanService(AppDbContext context, IAuthenticationService authenticationService, ILogger<BanService> logger, UserBanStatusMessager messagerService, IUserManagingService userManagingService)
 		{
 			_context = context;
 			_authenticationService = authenticationService;
 			_logger = logger;
-			_rabbitMqProducerService = rabbitMqProducerService;
+			_messagerService = messagerService;
 			_userManagingService = userManagingService;
 		}
 
@@ -121,7 +122,7 @@ namespace UserService.Services
 
 		private async Task SendUpdate(UserEntity user)
 		{
-			await _rabbitMqProducerService.SendUserBanStatusUpdateMessage(new UserBanStatusUpdateDto(user));
+			await _messagerService.SendMessage(new UserBanStatusUpdateDto(user));
 		}
 	}
 }

@@ -15,6 +15,8 @@ namespace UserService.Services.Interfaces
 		Task<ResponseDto> AddRole(Guid user, Guid role);
 		Task<ResponseDto> RemoveRole(Guid user, Guid role);
 		Task<UserEntity> FullInfoById(Guid id);
+		Task<bool> IsEmployee(UserEntity user);
+		Task<bool> IsClient(UserEntity user);
 
 	}
 }

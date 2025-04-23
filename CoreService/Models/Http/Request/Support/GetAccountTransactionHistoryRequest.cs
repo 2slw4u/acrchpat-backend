@@ -4,10 +4,10 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CoreService.Models.Http.Request.Support
 {
-    public class GetClientTransactionHistoryRequest
+    public class GetAccountTransactionHistoryRequest
     {
         [Required]
         [FromRoute]
-        public Guid userId { get; set; }
+        public Guid accountId { get; set; }
     }
 }

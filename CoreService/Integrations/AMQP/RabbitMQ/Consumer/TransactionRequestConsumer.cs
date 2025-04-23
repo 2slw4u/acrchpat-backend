@@ -16,9 +16,10 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 {
     public class TransactionRequestConsumer : RabbitMqConsumer
     {
-        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider)
+        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider, ILogger<TransactionRequestConsumer> logger)
             : base(configuration: configuration,
                   serviceProvider: serviceProvider,
+                  logger,
                   exchange: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Name"],
                   queue: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Queues:CoreService"])
         { }
@@ -30,7 +31,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 return await dbContext.Accounts.Where(x => x.UserId == userId).ToListAsync();
             }
         }
-        private async Task ValidateTransactionRequest(TransactionRequestDTO request)
+        private async Task<bool> ValidateTransactionRequest(TransactionRequestDTO request)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -38,10 +39,12 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 if (request.Type != TransactionType.LoanAccrual && request.Type != TransactionType.LoanPayment)
                 {
                     await this.SendResult(request, "This transaction type is not supported");
+                    return false;
                 } 
                 if (request.AccountId == null && request.Type == TransactionType.LoanAccrual)
                 {
                     await this.SendResult(request, "При пополнении необходимо указаывать идентификатор счета");
+                    return false;
                 }
                 else if (request.AccountId != null)
                 {
@@ -50,25 +53,30 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                     if (account == null)
                     {
                         await this.SendResult(request, "Искомого счета не существует");
+                        return false;
                     }
-                    else if (!userAccounts.Select(x => x.Id).Contains((Guid)request.AccountId))
+                    else if (!userAccounts.Select(x => x.Id).Contains(account.Id))
                     {
                         await this.SendResult(request, "Пользователь не владеет нужным счетом");
+                        return false;
                     }
                     else if (account.Status == AccountStatus.Closed)
                     {
                         await this.SendResult(request, "Искомый счет уже закрыт");
+                        return false;
                     }
                     else if (request.Type == TransactionType.LoanPayment && account.Balance < request.Amount)
                     {
                         await this.SendResult(request, "На счете недостаточно средств для списания");
+                        return false;
                     }
                 }
                 else if (request.Amount < double.Epsilon)
                 {
                     await this.SendResult(request, "Значение поля Amount должно быть положительным");
+                    return false;
                 }
-                await dbContext.SaveChangesAsync();
+                return true;
             }
         }
         private async Task ChangeBalance(TransactionRequestDTO request)
@@ -97,22 +105,26 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 var rabbitProducer = scope.ServiceProvider.GetRequiredService<IRabbitMqProducer>();
 
                 var transaction = mapper.Map<TransactionEntity>(request);
-                if (errorMessage != null)
+                if (errorMessage == null)
                 {
                     var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+                    var account = dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefault();
+                    transaction.Account = account;
                     await dbContext.Transactions.AddAsync(transaction);
                     await dbContext.SaveChangesAsync();
+                    _logger.LogInformation($"New transaction in DB: {transaction.Id.ToString()}");
                 }
 
                 var response = new TransactionResultDTO
                 {
-                    Id = request.PaymentId,
-                    Amount = request.Amount,
+                    TransactionId = transaction.Id,
+                    PaymentId = request.PaymentId,
+                    LoanId = request.LoanId,
                     Type = request.Type,
-                    PerformedAt = errorMessage == null ? transaction.PerformedAt : DateTime.UtcNow,
-                    Successful = errorMessage == null ? true : false,
+                    Status = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
+                _logger.LogInformation($"TransactionResultExchange message: {response.TransactionId.ToString()}");
                 await rabbitProducer.SendTransactionResultMessage(response);
             }
         }
@@ -144,20 +156,23 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 if (request != null)
                 {
-                    Console.WriteLine(message);
+                    _logger.LogInformation(message);
 
-                    await this.ValidateTransactionRequest(request);
-                    var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : null;
-                    if (suitableAccountId == null)
+                    if (await this.ValidateTransactionRequest(request))
                     {
-                        await this.SendResult(request, "Не нашлось подходящего счета");
+                        var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : request.AccountId;
+                        if (suitableAccountId == null)
+                        {
+                            await this.SendResult(request, "Не нашлось подходящего счета");
+                        }
+                        else
+                        {
+                            request.AccountId = suitableAccountId;
+                            await this.ChangeBalance(request);
+                            await this.SendResult(request);
+                        }
                     }
-                    else
-                    {
-                        request.AccountId = suitableAccountId;
-                        await this.ChangeBalance(request);
-                        await this.SendResult(request);
-                    }
+                    
                 }
                 if (_channel != null)
                 {
@@ -166,7 +181,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error processing message: {ex.Message}");
+                _logger.LogError($"Error processing message: {ex.Message}");
             }
         }
     }
