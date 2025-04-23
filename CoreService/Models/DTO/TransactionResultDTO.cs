@@ -7,9 +7,8 @@ namespace CoreService.Models.DTO
     {
         [Required]
         public Guid TransactionId { get; set; }
-        public Guid LoanId { get; set; }
-        [Required]
-        public Guid PaymentId { get; set; }
+        public Guid? LoanId { get; set; }
+        public Guid? PaymentId { get; set; }
         [Required]
         public TransactionType Type { get; set; }
         [Required]

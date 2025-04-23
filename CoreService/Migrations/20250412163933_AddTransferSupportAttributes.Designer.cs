@@ -3,6 +3,7 @@ using System;
 using CoreService.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CoreService.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    partial class CoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250412163933_AddTransferSupportAttributes")]
+    partial class AddTransferSupportAttributes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -84,7 +87,7 @@ namespace CoreService.Migrations
                     b.Property<int>("Currency")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("DestinationAccountId")
+                    b.Property<Guid>("DestinationAccountId")
                         .HasColumnType("uuid");
 
                     b.Property<double?>("DestinationAmount")
@@ -118,7 +121,9 @@ namespace CoreService.Migrations
 
                     b.HasOne("CoreService.Models.Database.Entity.AccountEntity", "DestinationAccount")
                         .WithMany()
-                        .HasForeignKey("DestinationAccountId");
+                        .HasForeignKey("DestinationAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Account");
 

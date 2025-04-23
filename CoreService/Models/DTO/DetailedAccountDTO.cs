@@ -17,5 +17,7 @@ namespace CoreService.Models.DTO
         public AccountStatus Status { get; set; }
         [Required]
         public double Balance { get; set; }
+        [Required]
+        public CurrencyISO Currency { get; set; }
     }
 }

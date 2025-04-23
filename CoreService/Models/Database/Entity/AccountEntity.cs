@@ -18,8 +18,14 @@ namespace CoreService.Models.Database.Entity
         [DefaultValue(0)]
         public double Balance { get; set; }
         [Required]
+        [DefaultValue(AccountType.UserCreditAccount)]
+        public AccountType Type { get; set; }
+        [Required]
         [DefaultValue(AccountStatus.Opened)]
         public AccountStatus Status { get; set; }
+        [Required]
+        [DefaultValue(CurrencyISO.RUB)]
+        public CurrencyISO Currency { get; set; }
         [Required]
         public DateTime CreatedAt { get; set; }
     }
