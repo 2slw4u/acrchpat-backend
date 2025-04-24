@@ -1,6 +1,7 @@
 ﻿using System.Text;
 using System.Text.Json;
 using LoanService.Models.General;
+using LoanService.Models.Loan;
 using LoanService.Services.Interfaces;
 using Microsoft.Extensions.Logging.Configuration;
 using RabbitMQ.Client;

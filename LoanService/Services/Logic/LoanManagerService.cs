@@ -70,10 +70,13 @@ public class LoanManagerService(AppDbContext dbContext,
             UserId = userId,
             Payments = payments,
             Rate = rate,
-            Status = LoanStatus.Open,
+            Status = LoanStatus.Pending,
             GivenMoney = model.Amount,
             Transactions = new()
         };
+        
+        await dbContext.Loans.AddAsync(loan);
+        await dbContext.SaveChangesAsync();
         
         await producer.SendTransactionRequestMessage(new TransactionRequest
         {
@@ -83,9 +86,6 @@ public class LoanManagerService(AppDbContext dbContext,
             AccountId = model.AccountIdToReceiveMoney,
             UserId = userId
         });
-        
-        await dbContext.Loans.AddAsync(loan);
-        await dbContext.SaveChangesAsync();
         
         return await GetLoan(loan.Id, userId, roles);
     }
@@ -254,6 +254,8 @@ public class LoanManagerService(AppDbContext dbContext,
             .Where(l => l.UserId == userId)
             .ToListAsync();
         
+        var pendingLoans = loans.Count(l => l.Status == LoanStatus.Pending);
+        var totalLoans = loans.Count - pendingLoans;
         if (loans.Count == 0)
             return 1f;
         
@@ -262,7 +264,7 @@ public class LoanManagerService(AppDbContext dbContext,
         var openLoans = loans.Count(l => l.Status == LoanStatus.Open);
         
         var score = closedLoans * 1.0f + openLoans * 0.5f - overdueLoans * 1.0f;
-        return score / loans.Count;
+        return score / totalLoans;
     }
 
     public async Task AddTransaction(Guid loanId, Guid transactionId, Guid? paymentId)
@@ -274,6 +276,11 @@ public class LoanManagerService(AppDbContext dbContext,
         if (loan == null)
         {
             throw new ResourceNotFoundException($"Loan with ID {loanId} not found in database");
+        }
+
+        if (loan.Transactions.Count == 0 && loan.Status == LoanStatus.Pending)
+        {
+            loan.Status = LoanStatus.Open;
         }
         
         loan.Transactions.Add(transactionId);

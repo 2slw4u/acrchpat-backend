@@ -7,5 +7,6 @@ public enum LoanStatus
 {
     Open,
     Closed,
-    Overdue
+    Overdue,
+    Pending
 }
