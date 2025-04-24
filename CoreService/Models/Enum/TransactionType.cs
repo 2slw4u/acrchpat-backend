@@ -13,6 +13,8 @@ namespace CoreService.Models.Enum
         [Description("Money accrued from taking a loan")]
         LoanAccrual,
         [Description("Payment for a taken loan")]
-        LoanPayment
+        LoanPayment,
+        [Description("Transer of money from one account to another")]
+        Transfer
     }
 }

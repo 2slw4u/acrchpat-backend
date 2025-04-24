@@ -7,5 +7,7 @@ namespace CoreService.Models.DTO
     {
         [Required]
         public string Name { get; set; }
+        [Required]
+        public CurrencyISO Currency { get; set; } = CurrencyISO.RUB;
     }
 }

@@ -26,6 +26,10 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.PerformedAt,
                     opt => opt.MapFrom(opt => opt.PerformedAt)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.MapFrom(opt => opt.Currency)
                 );
 
             CreateMap<TransactionEntity, DetailedTransactionDTO>()
@@ -44,6 +48,10 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.PerformedAt,
                     opt => opt.MapFrom(opt => opt.PerformedAt)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.MapFrom(opt => opt.Currency)
                 );
 
             CreateMap<DepositMoneyToAccountRequest, TransactionEntity>()
@@ -87,12 +95,24 @@ namespace CoreService.Helpers.Mappers
                     opt => opt.MapFrom(src => Guid.NewGuid())
                 )
                 .ForMember(
+                    dest => dest.Account,
+                    opt => opt.Ignore()
+                )
+                .ForMember(
+                    dest => dest.DestinationAccount,
+                    opt => opt.Ignore()
+                )
+                .ForMember(
                     dest => dest.Amount,
                     opt => opt.MapFrom(src => src.Amount)
                 )
                 .ForMember(
                     dest => dest.Type,
                     opt => opt.MapFrom(src => src.Type)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.Ignore()
                 )
                 .ForMember(
                     dest => dest.PerformedAt,

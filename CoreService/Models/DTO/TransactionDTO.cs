@@ -14,5 +14,7 @@ namespace CoreService.Models.DTO
         public TransactionType Type { get; set; }
         [Required]
         public DateTime PerformedAt { get; set; }
+        [Required]
+        public CurrencyISO Currency { get; set; }
     }
 }

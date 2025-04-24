@@ -14,15 +14,17 @@
                 <form asp-action="Login" method="post">
                     <input type="hidden" asp-for="ReturnUrl" />
 
+                    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+
                     <div class="form-group">
                         <label asp-for="Phone"></label>
-                        <input asp-for="Phone" class="form-control" placeholder="Введите и" />
+                        <input asp-for="Phone" class="form-control" placeholder="Введите id" />
                         <span asp-validation-for="Phone" class="text-danger"></span>
                     </div>
 
                     <div class="form-group">
                         <label asp-for="Password"></label>
-                        <input asp-for="Password" class="form-control" type="password" placeholder="Введите пароль" />
+                        <input asp-for="Password" type="password" class="form-control" placeholder="Введите пароль" />
                         <span asp-validation-for="Password" class="text-danger"></span>
                     </div>
 

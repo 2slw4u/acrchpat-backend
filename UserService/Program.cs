@@ -59,6 +59,9 @@ builder.Services.AddIdentityServer(options =>
 {
     options.UserInteraction.LoginUrl = "/Account/Login";
     options.UserInteraction.LoginReturnUrlParameter = "returnUrl";
+	options.UserInteraction.LogoutUrl = "/Account/Logout";
+	options.UserInteraction.LogoutIdParameter = "logoutId";
+
 })
     .AddAspNetIdentity<UserEntity>()
     .AddInMemoryApiResources(new List<ApiResource>
@@ -72,21 +75,32 @@ builder.Services.AddIdentityServer(options =>
     {
         new ApiScope("api1", "My API")
     })
-    .AddInMemoryClients(new List<Client>
-    {
-        new Client
-        {
-            ClientId = "client_app",
-            AllowedGrantTypes = GrantTypes.Code,
-            RequireClientSecret = false,
-            RequirePkce = true,
-            RedirectUris = { "http://localhost:5173/signin-callback" },
-            PostLogoutRedirectUris = { "http://localhost:5173" },
-            AllowedCorsOrigins = { "http://localhost:5173" },
-            AllowedScopes = { "openid", "profile", "api1" }
-        }
-    })
-    .AddInMemoryIdentityResources(new List<IdentityResource>
+	.AddInMemoryClients(new List<Client>
+	{
+		new Client
+		{
+			ClientId = "client_app",
+			AllowedGrantTypes = GrantTypes.Code,
+			RequireClientSecret = false,
+			RequirePkce = true,
+			RedirectUris = { "http://localhost:5173/signin-callback" },
+			PostLogoutRedirectUris = { "http://localhost:5173/" },
+			AllowedCorsOrigins = { "http://localhost:5173" },
+			AllowedScopes = { "openid", "profile", "api1" }
+		},
+		new Client
+		{
+			ClientId = "employee_app",
+			AllowedGrantTypes = GrantTypes.Code,
+			RequireClientSecret = false,
+			RequirePkce = true,
+			RedirectUris = { "http://localhost:5174/signin-callback" },
+			PostLogoutRedirectUris = { "http://localhost:5174/" },
+			AllowedCorsOrigins = { "http://localhost:5174" },
+			AllowedScopes = { "openid", "profile", "api1" }
+		}
+	})
+	.AddInMemoryIdentityResources(new List<IdentityResource>
     {
         new IdentityResources.OpenId(),
         new IdentityResources.Profile()
@@ -118,11 +132,10 @@ builder.Services.AddAuthentication(options =>
     });
 
 
-builder.Services.ConfigureApplicationCookie(options =>
+builder.Services.ConfigureApplicationCookie(opts =>
 {
-	options.Cookie.SameSite = SameSiteMode.Lax;
-	options.Cookie.SecurePolicy = CookieSecurePolicy.None;
-	options.LoginPath = "/Account/Login";
+	opts.Cookie.SameSite = SameSiteMode.Lax;
+	opts.Cookie.SecurePolicy = CookieSecurePolicy.None;
 });
 builder.Services.Configure<CookieAuthenticationOptions>(
 	IdentityServerConstants.DefaultCookieAuthenticationScheme,

@@ -3,6 +3,7 @@ using System;
 using CoreService.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace CoreService.Migrations
 {
     [DbContext(typeof(CoreDbContext))]
-    partial class CoreDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250404052459_CurrencyAndMasterAccount")]
+    partial class CurrencyAndMasterAccount
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -54,19 +57,6 @@ namespace CoreService.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Accounts");
-
-                    b.HasData(
-                        new
-                        {
-                            Id = new Guid("c80c02e2-af14-4ea7-b021-49372536d995"),
-                            Balance = 100000.0,
-                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
-                            Currency = 0,
-                            Name = "MASTER_ACCOUNT",
-                            Status = 0,
-                            Type = 0,
-                            UserId = new Guid("00000000-0000-0000-0000-000000000000")
-                        });
                 });
 
             modelBuilder.Entity("CoreService.Models.Database.Entity.TransactionEntity", b =>
@@ -84,15 +74,6 @@ namespace CoreService.Migrations
                     b.Property<int>("Currency")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("DestinationAccountId")
-                        .HasColumnType("uuid");
-
-                    b.Property<double?>("DestinationAmount")
-                        .HasColumnType("double precision");
-
-                    b.Property<int?>("DestinationCurrency")
-                        .HasColumnType("integer");
-
                     b.Property<DateTime>("PerformedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -102,8 +83,6 @@ namespace CoreService.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
-
-                    b.HasIndex("DestinationAccountId");
 
                     b.ToTable("Transactions");
                 });
@@ -116,13 +95,7 @@ namespace CoreService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CoreService.Models.Database.Entity.AccountEntity", "DestinationAccount")
-                        .WithMany()
-                        .HasForeignKey("DestinationAccountId");
-
                     b.Navigation("Account");
-
-                    b.Navigation("DestinationAccount");
                 });
 #pragma warning restore 612, 618
         }
