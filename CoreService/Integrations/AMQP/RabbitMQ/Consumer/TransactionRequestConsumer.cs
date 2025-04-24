@@ -28,7 +28,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
         private readonly List<TransactionType> transactionTypesRequiringMasterAccount
             = new List<TransactionType> { TransactionType.LoanAccrual, TransactionType.LoanPayment };
         private readonly List<TransactionType> transactionTypesRequiringBalanceDeduction
-            = new List<TransactionType> { TransactionType.Withdrawal, TransactionType.LoanPayment, TransactionType.Transfer };
+            = new List<TransactionType> { TransactionType.Withdrawal, TransactionType.LoanAccrual, TransactionType.Transfer };
         public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider, ILogger<TransactionRequestConsumer> logger, IUniRateAdapter uniRateAdapter) 
             : base(configuration: configuration,
                   serviceProvider: serviceProvider,
@@ -133,7 +133,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
         {
             if (account == null)
             {
-                throw new AccountNotFound();
+                return;
             }
             using (var scope = _serviceProvider.CreateScope())
             {
@@ -161,25 +161,34 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 var account = await GetAccountById(request.AccountId);
                 if (account == null)
                 {
-                    throw new AccountNotFound();
+                    errorMessage = "Искомый счёт не найден";
                 }
-                var destinationAccount = await GetAccountById(request.DestinationAccountId);
-                var transaction = mapper.Map<TransactionEntity>(request, opt =>
+                AccountEntity? destinationAccount = null;
+                double? destinationAmount = null;
+                if (request.Type == TransactionType.Transfer)
+                {
+                    destinationAccount = await GetAccountById(request.DestinationAccountId);
+                    var convertedAmount = destinationAccount == null ? null : await _uniRateAdapter.ConvertCurrency(new ConvertCurrencyRequest
+                    {
+                        BaseCurrency = account.Currency,
+                        TargetCurrency = destinationAccount.Currency,
+                        Amount = request.Amount,
+                    });
+                    destinationAmount = destinationAccount == null ? null : convertedAmount.Amount;
+                }
+                var transactionId = Guid.NewGuid();
+                if (errorMessage == null)
+                {
+                    var transaction = mapper.Map<TransactionEntity>(request, opt =>
                     opt.AfterMap(async (src, dest) =>
                     {
                         dest.AccountId = account.Id;
                         dest.DestinationAccountId = request.DestinationAccountId;
                         dest.Currency = account.Currency;
                         dest.DestinationCurrency = destinationAccount == null ? null : destinationAccount.Currency;
-                        dest.DestinationAmount = destinationAccount == null ? null : (await _uniRateAdapter.ConvertCurrency(new ConvertCurrencyRequest
-                        {
-                            BaseCurrency = account.Currency,
-                            TargetCurrency = destinationAccount.Currency,
-                            Amount = request.Amount,
-                        })).Amount;
+                        dest.DestinationAmount = destinationAccount == null ? null : destinationAmount;
                     }));
-                if (errorMessage == null)
-                {
+                    transaction.Id = transactionId;
                     var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
                     await dbContext.Transactions.AddAsync(transaction);
                     await dbContext.SaveChangesAsync();
@@ -188,10 +197,10 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 var response = new TransactionResultDTO
                 {
-                    TransactionId = transaction.Id,
+                    TransactionId = transactionId,
                     PaymentId = request.PaymentId,
                     LoanId = request.LoanId,
-                    Type = transaction.Type,
+                    Type = request.Type,
                     Status = errorMessage == null ? true : false,
                     ErrorMessage = errorMessage
                 };
@@ -206,10 +215,13 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-                var account = await dbContext.Accounts.
+                var suitableAccounts = await dbContext.Accounts.
                     Where(x => x.UserId == request.UserId 
                     && x.Status == AccountStatus.Opened 
-                    && (request.Type == TransactionType.LoanPayment && x.Balance > request.Amount)).FirstOrDefaultAsync();
+                    && (request.Type == TransactionType.LoanPayment && x.Balance > request.Amount)).ToListAsync();
+                var account = request.Type == TransactionType.LoanPayment 
+                    ? suitableAccounts.Where(x => x.Currency == CurrencyISO.RUB).FirstOrDefault() 
+                    : suitableAccounts.FirstOrDefault();
                 if (account == null)
                 {
                     return null;
