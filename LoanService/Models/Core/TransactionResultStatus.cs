@@ -1,6 +1,6 @@
 ﻿using System.Text.Json.Serialization;
 
-namespace LoanService.Models.General;
+namespace LoanService.Models.Core;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum TransactionResultStatus

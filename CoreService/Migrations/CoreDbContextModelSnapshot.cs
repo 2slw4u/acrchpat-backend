@@ -17,7 +17,7 @@ namespace CoreService.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.2")
+                .HasAnnotation("ProductVersion", "8.0.0")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -34,12 +34,22 @@ namespace CoreService.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Currency")
+                        .HasColumnType("integer");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Type")
                         .HasColumnType("integer");
 
                     b.Property<Guid>("UserId")
@@ -47,7 +57,24 @@ namespace CoreService.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("Number")
+                        .IsUnique();
+
                     b.ToTable("Accounts");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("c80c02e2-af14-4ea7-b021-49372536d995"),
+                            Balance = 100000.0,
+                            CreatedAt = new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                            Currency = 0,
+                            Name = "MASTER_ACCOUNT",
+                            Number = "1",
+                            Status = 0,
+                            Type = 0,
+                            UserId = new Guid("00000000-0000-0000-0000-000000000000")
+                        });
                 });
 
             modelBuilder.Entity("CoreService.Models.Database.Entity.TransactionEntity", b =>
@@ -62,6 +89,18 @@ namespace CoreService.Migrations
                     b.Property<double>("Amount")
                         .HasColumnType("double precision");
 
+                    b.Property<int>("Currency")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid?>("DestinationAccountId")
+                        .HasColumnType("uuid");
+
+                    b.Property<double?>("DestinationAmount")
+                        .HasColumnType("double precision");
+
+                    b.Property<int?>("DestinationCurrency")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("PerformedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -71,6 +110,8 @@ namespace CoreService.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AccountId");
+
+                    b.HasIndex("DestinationAccountId");
 
                     b.ToTable("Transactions");
                 });
@@ -83,7 +124,13 @@ namespace CoreService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CoreService.Models.Database.Entity.AccountEntity", "DestinationAccount")
+                        .WithMany()
+                        .HasForeignKey("DestinationAccountId");
+
                     b.Navigation("Account");
+
+                    b.Navigation("DestinationAccount");
                 });
 #pragma warning restore 612, 618
         }

@@ -112,6 +112,28 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
         return Ok(await loanService.PayLoan(userId, id, paymentId, accountId));
     }
     
+    /// <response code="200">Кредит удален</response>
+    /// <response code="401">Неавторизован</response>
+    /// <response code="403">Нет полномочий</response>
+    /// <response code="404">Данные не найдены</response>
+    /// <response code="500">Ошибка сервера</response>
+    [HttpDelete("{id}")]
+    [EndpointSummary("Удалить кредит")]
+    [Authorize]
+    [RoleAuthorize("Employee")]
+    [ProducesResponseType(typeof(string), 200)]
+    [ProducesResponseType(typeof(ResponseModel), 400)]
+    [ProducesResponseType(typeof(ResponseModel), 401)]
+    [ProducesResponseType(typeof(ResponseModel), 403)]
+    [ProducesResponseType(typeof(ResponseModel), 404)]
+    [ProducesResponseType(typeof(ResponseModel), 409)]
+    [ProducesResponseType(typeof(ResponseModel), 500)]
+    public async Task<IActionResult> DeleteLoan([Required] Guid id)
+    {
+        await loanService.DeleteInvalidLoan(id);
+        return Ok();
+    }
+    
     /// <response code="200">Ваша кредитная история получена</response>
     /// <response code="400">Неверные входные данные</response>
     /// <response code="401">Неавторизован</response>

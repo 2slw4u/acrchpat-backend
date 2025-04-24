@@ -9,6 +9,8 @@ namespace CoreService.Models.DTO
         public Guid Id { get; set; }
         [Required]
         public string Name { get; set; }
+        [Required] 
+        public string Number { get; set; }
         [Required]
         public Guid UserId { get; set; }
         [Required]
@@ -17,5 +19,7 @@ namespace CoreService.Models.DTO
         public AccountStatus Status { get; set; }
         [Required]
         public double Balance { get; set; }
+        [Required]
+        public CurrencyISO Currency { get; set; }
     }
 }

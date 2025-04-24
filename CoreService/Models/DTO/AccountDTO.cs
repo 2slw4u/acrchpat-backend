@@ -10,8 +10,12 @@ namespace CoreService.Models.DTO
         [Required]
         public string Name { get; set; }
         [Required]
+        public string Number { get; set; }
+        [Required]
         public AccountStatus Status { get; set; }
         [Required]
         public double Balance { get; set; }
+        [Required]
+        public CurrencyISO Currency { get; set; }
     }
 }

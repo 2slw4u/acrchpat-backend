@@ -1,6 +1,7 @@
 ﻿using AutoMapper;
 using CoreService.Models.Database.Entity;
 using CoreService.Models.DTO;
+using CoreService.Models.Enum;
 
 namespace CoreService.Helpers.Mappers
 {
@@ -20,6 +21,18 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.CreatedAt,
                     opt => opt.MapFrom(src => DateTime.UtcNow)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.MapFrom(opt => opt.Currency)
+                )
+                .ForMember(
+                    dest => dest.Type,
+                    opt => opt.MapFrom(src => AccountType.UserCreditAccount)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.Ignore()
                 );
 
             CreateMap<AccountEntity, AccountDTO>()
@@ -38,6 +51,14 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.Balance,
                     opt => opt.MapFrom(opt => opt.Balance)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.MapFrom(opt => opt.Currency)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.MapFrom(opt => opt.Number)
                 );
 
             CreateMap<AccountEntity, DetailedAccountDTO>()
@@ -64,6 +85,14 @@ namespace CoreService.Helpers.Mappers
                 .ForMember(
                     dest => dest.Balance,
                     opt => opt.MapFrom(opt => opt.Balance)
+                )
+                .ForMember(
+                    dest => dest.Currency,
+                    opt => opt.MapFrom(opt => opt.Currency)
+                )
+                .ForMember(
+                    dest => dest.Number,
+                    opt => opt.MapFrom(opt => opt.Number)
                 );
         }
     }

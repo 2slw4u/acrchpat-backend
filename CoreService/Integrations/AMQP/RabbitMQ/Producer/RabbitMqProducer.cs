@@ -30,6 +30,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
         private async Task InitializeExchanges(IConfiguration configuration)
         {
             await this.InitializeTransactionResultExchage(configuration);
+            await this.InitializeTransactionRequestExchange(configuration);
         }
         private async Task InitializeTransactionResultExchage(IConfiguration configuration)
         {
@@ -40,6 +41,16 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
                 durable: true
             );
             _exchanges.Add("TransactionResult", transactionResultExchange);
+        }
+        private async Task InitializeTransactionRequestExchange(IConfiguration configuration)
+        {
+            var transactionRequestExchange = $"{configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Name"]}";
+            await _channel.ExchangeDeclareAsync(
+                exchange: transactionRequestExchange,
+                type: ExchangeType.Fanout,
+                durable: true
+            );
+            _exchanges.Add("TransactionRequest", transactionRequestExchange);
         }
         private async Task SendMessage(object obj, string exchange)
         {
@@ -72,6 +83,12 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
         {
             var transactionResultExchange = _exchanges.FirstOrDefault(x => x.Key == "TransactionResult").Value;
             await this.SendMessage(message, transactionResultExchange);
+        }
+
+        public async Task SendTransactionRequestMessage(TransactionRequestDTO message)
+        {
+            var transactionRequestExchange = _exchanges.FirstOrDefault(x => x.Key == "TransactionRequest").Value;
+            await this.SendMessage(message, transactionRequestExchange);
         }
     }
 }

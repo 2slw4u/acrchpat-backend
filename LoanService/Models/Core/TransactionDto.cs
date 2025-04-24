@@ -9,4 +9,6 @@ public class TransactionDto
     public TransactionType Type { get; set; }
     
     public DateTime PerformedAt { get; set; }
+    
+    public CurrencyIso Currency { get; set; }
 }

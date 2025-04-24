@@ -11,18 +11,42 @@ using CoreService.Models.Database.Entity;
 using CoreService.Models.Database;
 using Microsoft.EntityFrameworkCore;
 using System.Linq;
+using CoreService.Models.Exceptions;
+using CoreService.Integrations.Http.UniRate;
+using CoreService.Models.Http.Request.UniRate;
 
 namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 {
     public class TransactionRequestConsumer : RabbitMqConsumer
     {
-        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider, ILogger<TransactionRequestConsumer> logger)
+        private readonly IUniRateAdapter _uniRateAdapter;
+
+        private readonly List<TransactionType> transactionTypesRequiringAccountId
+            = new List<TransactionType> { TransactionType.Withdrawal, TransactionType.Deposit, TransactionType.Transfer } ;
+        private readonly List<TransactionType> transactionTypesRequiringDestinationAccountId
+            = new List<TransactionType> { TransactionType.Transfer };
+        private readonly List<TransactionType> transactionTypesRequiringMasterAccount
+            = new List<TransactionType> { TransactionType.LoanAccrual, TransactionType.LoanPayment };
+        private readonly List<TransactionType> transactionTypesRequiringBalanceDeduction
+            = new List<TransactionType> { TransactionType.Withdrawal, TransactionType.LoanAccrual, TransactionType.Transfer };
+        public TransactionRequestConsumer(IConfiguration configuration, IServiceProvider serviceProvider, ILogger<TransactionRequestConsumer> logger, IUniRateAdapter uniRateAdapter) 
             : base(configuration: configuration,
                   serviceProvider: serviceProvider,
                   logger,
                   exchange: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Name"],
                   queue: configuration["Integrations:AMQP:Rabbit:Exchanges:TransactionRequestExchange:Queues:CoreService"])
-        { }
+        {
+            _uniRateAdapter = uniRateAdapter;
+        }
+        private async Task<AccountEntity?> GetAccountById(Guid? accountId)
+        {
+            if (accountId == null) return null;
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+                return await dbContext.Accounts.Where(x => x.Id == accountId).FirstOrDefaultAsync();
+            }
+        }
         private async Task<List<AccountEntity>> GetUserAccounts(Guid userId)
         {
             using (var scope = _serviceProvider.CreateScope())
@@ -31,67 +55,97 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 return await dbContext.Accounts.Where(x => x.UserId == userId).ToListAsync();
             }
         }
-        private async Task<bool> ValidateTransactionRequest(TransactionRequestDTO request)
+
+        private async Task<AccountEntity?> GetMasterAccount()
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-                if (request.Type != TransactionType.LoanAccrual && request.Type != TransactionType.LoanPayment)
-                {
-                    await this.SendResult(request, "This transaction type is not supported");
-                    return false;
-                } 
-                if (request.AccountId == null && request.Type == TransactionType.LoanAccrual)
-                {
-                    await this.SendResult(request, "При пополнении необходимо указаывать идентификатор счета");
-                    return false;
-                }
-                else if (request.AccountId != null)
-                {
-                    var userAccounts = await GetUserAccounts(request.UserId);
-                    var account = await dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefaultAsync();
-                    if (account == null)
-                    {
-                        await this.SendResult(request, "Искомого счета не существует");
-                        return false;
-                    }
-                    else if (!userAccounts.Select(x => x.Id).Contains(account.Id))
-                    {
-                        await this.SendResult(request, "Пользователь не владеет нужным счетом");
-                        return false;
-                    }
-                    else if (account.Status == AccountStatus.Closed)
-                    {
-                        await this.SendResult(request, "Искомый счет уже закрыт");
-                        return false;
-                    }
-                    else if (request.Type == TransactionType.LoanPayment && account.Balance < request.Amount)
-                    {
-                        await this.SendResult(request, "На счете недостаточно средств для списания");
-                        return false;
-                    }
-                }
-                else if (request.Amount < double.Epsilon)
-                {
-                    await this.SendResult(request, "Значение поля Amount должно быть положительным");
-                    return false;
-                }
-                return true;
+                return await dbContext.Accounts.Where(x => x.Type == AccountType.BankMasterAccount).FirstOrDefaultAsync();
             }
         }
-        private async Task ChangeBalance(TransactionRequestDTO request)
+        private string? ValidateAccount(AccountEntity? account)
+        {
+            if (account == null)
+            {
+                return "Искомого счета не существует";
+            }
+            if (account.Status == AccountStatus.Closed)
+            {
+                return "Искомый счет уже закрыт";
+            }
+            return null;
+        }
+        private async Task<string?> ValidateTransactionRequest(TransactionRequestDTO request)
         {
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-                var account = await dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefaultAsync();
-                if (request.Type == TransactionType.LoanAccrual)
+                /*if (request.Type != TransactionType.LoanAccrual && request.Type != TransactionType.LoanPayment)
                 {
-                    account.Balance += request.Amount;
+                    return "This transaction type is not supported";
+                } */
+                if (request.Amount < double.Epsilon)
+                {
+                    return "Значение поля Amount должно быть положительным";
+                }
+                if (request.AccountId == null && transactionTypesRequiringAccountId.Contains(request.Type))
+                {
+                    return "При выбранном типе транзакции необходимо указать идентификатор счета";
+                }
+                if (transactionTypesRequiringMasterAccount.Contains(request.Type))
+                {
+                    var masterAccount = await GetMasterAccount();
+                    if (masterAccount == null)
+                    {
+                        return "Мастер-счет отсутствует в системе";
+                    }
+                    if (transactionTypesRequiringMasterAccount
+                        .Intersect(transactionTypesRequiringBalanceDeduction)
+                        .Contains(request.Type))
+                    {
+                        if (masterAccount.Balance <= request.Amount)
+                        {
+                            return "У банка кончились деньги :(";
+                        }
+                    }
+                }
+                var userAccounts = await GetUserAccounts(request.UserId);
+                var account = await GetAccountById(request.AccountId);
+                if (ValidateAccount(account) != null) return ValidateAccount(account);
+                if (transactionTypesRequiringDestinationAccountId.Contains(request.Type))
+                {
+                    var destinationAccount = await GetAccountById(request.DestinationAccountId);
+                    if (ValidateAccount(destinationAccount) != null) return ValidateAccount(destinationAccount);
+                }
+                if (!userAccounts.Select(x => x.Id).Contains(account.Id))
+                {
+                    return "Пользователь не владеет нужным счетом";
+                }
+                if (request.Type == TransactionType.LoanPayment && account.Balance < request.Amount)
+                {
+                    return "На счете недостаточно средств для списания";
+                }
+                return null;
+            }
+        }
+        private async Task ChangeAccountBalance(AccountEntity? account, double amount, bool deposit)
+        {
+            if (account == null)
+            {
+                return;
+            }
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+                var accountEntity = await dbContext.Accounts.Where(x => x.Id == account.Id).FirstOrDefaultAsync();
+                if (deposit)
+                {
+                    accountEntity.Balance += amount;
                 }
                 else
                 {
-                    account.Balance -= request.Amount;
+                    accountEntity.Balance -= amount;
                 }
                 await dbContext.SaveChangesAsync();
             }
@@ -104,12 +158,38 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 var mapper = scope.ServiceProvider.GetRequiredService<IMapper>();
                 var rabbitProducer = scope.ServiceProvider.GetRequiredService<IRabbitMqProducer>();
 
-                var transaction = mapper.Map<TransactionEntity>(request);
+                var account = await GetAccountById(request.AccountId);
+                if (account == null)
+                {
+                    errorMessage = "Искомый счёт не найден";
+                }
+                AccountEntity? destinationAccount = null;
+                double? destinationAmount = null;
+                if (request.Type == TransactionType.Transfer)
+                {
+                    destinationAccount = await GetAccountById(request.DestinationAccountId);
+                    var convertedAmount = destinationAccount == null ? null : await _uniRateAdapter.ConvertCurrency(new ConvertCurrencyRequest
+                    {
+                        BaseCurrency = account.Currency,
+                        TargetCurrency = destinationAccount.Currency,
+                        Amount = request.Amount,
+                    });
+                    destinationAmount = destinationAccount == null ? null : convertedAmount.Amount;
+                }
+                var transactionId = Guid.NewGuid();
                 if (errorMessage == null)
                 {
+                    var transaction = mapper.Map<TransactionEntity>(request, opt =>
+                    opt.AfterMap(async (src, dest) =>
+                    {
+                        dest.AccountId = account.Id;
+                        dest.DestinationAccountId = request.DestinationAccountId;
+                        dest.Currency = account.Currency;
+                        dest.DestinationCurrency = destinationAccount == null ? null : destinationAccount.Currency;
+                        dest.DestinationAmount = destinationAccount == null ? null : destinationAmount;
+                    }));
+                    transaction.Id = transactionId;
                     var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-                    var account = dbContext.Accounts.Where(x => x.Id == request.AccountId).FirstOrDefault();
-                    transaction.Account = account;
                     await dbContext.Transactions.AddAsync(transaction);
                     await dbContext.SaveChangesAsync();
                     _logger.LogInformation($"New transaction in DB: {transaction.Id.ToString()}");
@@ -117,7 +197,7 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
                 var response = new TransactionResultDTO
                 {
-                    TransactionId = transaction.Id,
+                    TransactionId = transactionId,
                     PaymentId = request.PaymentId,
                     LoanId = request.LoanId,
                     Type = request.Type,
@@ -131,18 +211,60 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
 
         private async Task<Guid?> DetermineSuitableAccount(TransactionRequestDTO request)
         {
+            if (transactionTypesRequiringAccountId.Contains(request.Type)) return null;
             using (var scope = _serviceProvider.CreateScope())
             {
                 var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
-                var account = await dbContext.Accounts.
+                var suitableAccounts = await dbContext.Accounts.
                     Where(x => x.UserId == request.UserId 
                     && x.Status == AccountStatus.Opened 
-                    && (request.Type == TransactionType.LoanPayment && x.Balance > request.Amount)).FirstOrDefaultAsync();
+                    && (request.Type == TransactionType.LoanPayment && x.Balance > request.Amount)).ToListAsync();
+                var account = request.Type == TransactionType.LoanPayment 
+                    ? suitableAccounts.Where(x => x.Currency == CurrencyISO.RUB).FirstOrDefault() 
+                    : suitableAccounts.FirstOrDefault();
                 if (account == null)
                 {
                     return null;
                 }
                 return account.Id;
+            }
+        }
+
+        private async Task PerformTransaction(TransactionRequestDTO request)
+        {
+            using (var scope = _serviceProvider.CreateScope())
+            {
+                var dbContext = scope.ServiceProvider.GetRequiredService<CoreDbContext>();
+                var masterAccount = await GetMasterAccount();
+                var account = await GetAccountById(request.AccountId);
+                var destinationAccount = await GetAccountById(request.DestinationAccountId);
+                switch (request.Type)
+                {
+                    case TransactionType.LoanPayment:
+                        await this.ChangeAccountBalance(masterAccount, request.Amount, true);
+                        await this.ChangeAccountBalance(account, request.Amount, false);
+                        break;
+                    case TransactionType.LoanAccrual:
+                        await this.ChangeAccountBalance(masterAccount, request.Amount, false);
+                        await this.ChangeAccountBalance(account, request.Amount, true);
+                        break;
+                    case TransactionType.Deposit:
+                        await this.ChangeAccountBalance(account, request.Amount, true);
+                        break;
+                    case TransactionType.Withdrawal:
+                        await this.ChangeAccountBalance(account, request.Amount, false);
+                        break;
+                    case TransactionType.Transfer:
+                        var destinationAccountAmount = await _uniRateAdapter.ConvertCurrency(new ConvertCurrencyRequest
+                        {
+                            BaseCurrency = account.Currency,
+                            TargetCurrency = destinationAccount.Currency,
+                            Amount = request.Amount,
+                        });
+                        await this.ChangeAccountBalance(account, request.Amount, false);
+                        await this.ChangeAccountBalance(destinationAccount, destinationAccountAmount.Amount, true);
+                        break;
+                }
             }
         }
 
@@ -158,21 +280,22 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Consumer
                 {
                     _logger.LogInformation(message);
 
-                    if (await this.ValidateTransactionRequest(request))
+                    var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : request.AccountId;
+                    if (suitableAccountId == null)
                     {
-                        var suitableAccountId = request.AccountId == null ? await this.DetermineSuitableAccount(request) : request.AccountId;
-                        if (suitableAccountId == null)
-                        {
-                            await this.SendResult(request, "Не нашлось подходящего счета");
-                        }
-                        else
-                        {
-                            request.AccountId = suitableAccountId;
-                            await this.ChangeBalance(request);
-                            await this.SendResult(request);
-                        }
+                        await this.SendResult(request, "Не нашлось подходящего счета");
                     }
-                    
+                    request.AccountId = suitableAccountId;
+                    var errorMessage = await this.ValidateTransactionRequest(request);
+                    if (errorMessage != null)
+                    {
+                        await this.SendResult(request, errorMessage);
+                    }
+                    else
+                    {
+                        await this.PerformTransaction(request);
+                        await this.SendResult(request);
+                    }
                 }
                 if (_channel != null)
                 {
