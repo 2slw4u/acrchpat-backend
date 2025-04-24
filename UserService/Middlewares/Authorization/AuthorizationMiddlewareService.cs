@@ -1,4 +1,5 @@
-﻿using UserService.Models.Exceptions;
+﻿using Microsoft.AspNetCore.Authorization;
+using UserService.Models.Exceptions;
 using UserService.Services.Interfaces;
 
 namespace UserService.Middlewares.Authorization
@@ -14,6 +15,15 @@ namespace UserService.Middlewares.Authorization
 
 		public async Task InvokeAsync(HttpContext context)
 		{
+			var endpoint = context.GetEndpoint();
+
+			if (endpoint?.Metadata?.GetMetadata<IAllowAnonymous>() != null)
+			{
+				await _next(context);
+				return;
+			}
+
+
 			if (context.User?.Identity?.IsAuthenticated == true)
 			{
 				using (var scope = context.RequestServices.CreateScope())
