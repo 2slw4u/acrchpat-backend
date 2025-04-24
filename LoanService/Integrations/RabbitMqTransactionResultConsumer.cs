@@ -102,6 +102,7 @@ public class RabbitMqTransactionResultConsumer(
         {
             var body = ea.Body.ToArray();
             var message = Encoding.UTF8.GetString(body);
+            logger.LogInformation($"Transaction info: {message}");
             var result = JsonSerializer.Deserialize<TransactionResult>(message);
             
             if (result != null)
