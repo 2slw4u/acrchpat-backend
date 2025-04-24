@@ -104,7 +104,7 @@ namespace UserService.Controllers
             var isClient = await _userService.IsClient(user);
             var isEmployee = await _userService.IsEmployee(user);
 
-            _logger.LogInformation(model.ReturnUrl, model.ReturnUrl.Contains("5174"));
+            _logger.LogInformation(model.ReturnUrl + model.ReturnUrl.Contains("5174"));
             if (!isClient && model.ReturnUrl.Contains("5173"))
             {
                 ModelState.AddModelError(string.Empty, "User is not a client");
@@ -136,22 +136,22 @@ namespace UserService.Controllers
             return Redirect("~/");
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Logout(string logoutId)
-        {
-            await _signInManager.SignOutAsync();
+		[HttpGet]
+		[AllowAnonymous]
+		public async Task<IActionResult> Logout(string logoutId)
+		{
+			_logger.LogInformation("logout begin");
+			await _signInManager.SignOutAsync();
+            _logger.LogInformation("signout successful");
+			var ctx = await _interaction.GetLogoutContextAsync(logoutId);
+			var redirect = ctx?.PostLogoutRedirectUri ?? "~/";
 
-            var context = await _interaction.GetLogoutContextAsync(logoutId);
+			await HttpContext.SignOutAsync(IdentityServerConstants.DefaultCookieAuthenticationScheme);
 
-            return SignOut(
-                new AuthenticationProperties
-                {
-                    RedirectUri = context.PostLogoutRedirectUri
-                },
-                IdentityServerConstants.DefaultCookieAuthenticationScheme,
-                OpenIdConnectDefaults.AuthenticationScheme);
-        }
-    }
+			return Redirect(redirect);
+		}
+
+	}
 
 }
 
