@@ -60,6 +60,7 @@ public class Requester
 
         var response = await HttpClient.SendAsync(request);
         var responseText = await response.Content.ReadAsStringAsync();
+        Console.WriteLine($"got data for {ServiceName}: {responseText}");
 
         if (!response.IsSuccessStatusCode)
         {

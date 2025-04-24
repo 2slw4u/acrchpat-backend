@@ -2,7 +2,7 @@
 
 namespace LoanService.Models.General;
 
-[JsonConverter(typeof(JsonStringEnumConverter))]
+[JsonConverter(typeof(JsonStringEnumConverter<CurrencyIso>))]
 public enum CurrencyIso
 {
     RUB,

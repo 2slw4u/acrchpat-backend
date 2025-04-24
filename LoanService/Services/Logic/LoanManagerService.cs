@@ -122,6 +122,7 @@ public class LoanManagerService(AppDbContext dbContext,
         if (loan.Transactions.Count > 0)
         {
             transactions = await coreRequester.GetTransactionsAsync(loan.Transactions);
+            //Console.WriteLine($"got transactions: {transactions.Transactions.Count}");
         }
         
         return new LoanDetailDto
