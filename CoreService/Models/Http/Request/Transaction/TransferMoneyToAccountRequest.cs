@@ -10,7 +10,7 @@ namespace CoreService.Models.Http.Request.Transaction
         public Guid accountId { get; set; }
         [Required]
         [FromQuery]
-        public Guid DestinationAccountId { get; set; }
+        public string DestinationAccountNumber { get; set; }
         [Required]
         [FromQuery]
         public double Amount { get; set; }

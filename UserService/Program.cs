@@ -112,7 +112,8 @@ builder.Services.AddAuthentication(options =>
         options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
         options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     })
-    .AddJwtBearer("Bearer", options =>
+	.AddCookie()
+	.AddJwtBearer("Bearer", options =>
     {
         options.Authority = "http://51.250.46.120:5003";
         options.MetadataAddress = "http://51.250.46.120:5003/.well-known/openid-configuration";
@@ -203,13 +204,14 @@ app.UseRouting();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseIdentityServer();
 
 app.UseAuthentication();
-app.UseAuthorizationMiddleware();
 app.UseAuthorization();
 
 app.MapDefaultControllerRoute();
 
+//app.UseAuthorizationMiddleware();
 
 app.Run();

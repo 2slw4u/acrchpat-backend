@@ -50,9 +50,29 @@ namespace CoreService.Services
                 .Where(x => (accounts.Select(y => y.Id).Contains(x.Account.Id)))
                 .OrderByDescending(x => x.PerformedAt)
                 .ToListAsync();
+            var transactionDtos = transactions.Select(x => _mapper.Map<TransactionDTO>(x, opt =>
+                opt.AfterMap((src, dest) =>
+                {
+                    dest.Type = TransactionTypeMapper.MapTransactionTypeToFront(x.Type);
+                }))).ToList();
+            var receivedTransactions = await _dbContext.Transactions
+                .Where(x => (accounts.Select(y => y.Id).Contains((Guid)x.DestinationAccountId)))
+                .OrderByDescending(x => x.PerformedAt)
+                .ToListAsync();
+            foreach (var receivedTransaction in receivedTransactions)
+            {
+                var transactionDto = _mapper.Map<TransactionDTO>(receivedTransaction, opt =>
+                opt.AfterMap((src, dest) =>
+                {
+                    dest.Type = TransactionTypeMapper.MapTransactionTypeToFront(receivedTransaction.Type, true);
+                }));
+                transactionDto.Currency = (Models.Enum.CurrencyISO)receivedTransaction.DestinationCurrency;
+                transactionDto.Amount = (double)receivedTransaction.DestinationAmount;
+                transactionDtos.Add(transactionDto);
+            }
             return new GetTransactionsHistoryResponse
             {
-                Transactions = transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToList()
+                Transactions = transactionDtos
             };
         }
 
@@ -113,7 +133,7 @@ namespace CoreService.Services
         {
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = await _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefaultAsync();
-            var destinationAccount = await _dbContext.Accounts.Where(x => x.Id == request.DestinationAccountId).FirstOrDefaultAsync();
+            var destinationAccount = await _dbContext.Accounts.Where(x => x.Number == request.DestinationAccountNumber).FirstOrDefaultAsync();
             if (account == null || destinationAccount == null) {  throw new AccountNotFound(); }
             if (account.UserId != userId)
             {
@@ -162,14 +182,19 @@ namespace CoreService.Services
             }
             return new GetTransactionsDataResponse
             {
-                Transactions = await transactions.Select(x => _mapper.Map<TransactionDTO>(x)).ToListAsync()
+                Transactions = transactions.ToList()
+                    .Select(x => _mapper.Map<TransactionDTO>(x, opt =>
+                        opt.AfterMap((src, dest) =>
+                        {
+                            dest.Type = TransactionTypeMapper.MapTransactionTypeToFront(x.Type);
+                        }))).ToList()
             };
         }
 
         public async Task<GetTransferMoneyRatesResponse> GetTransferMoneyRates(HttpContext httpContext, GetTransferMoneyRatesRequest request)
         {
             var account = await _dbContext.Accounts.Where(x => x.Id ==  request.AccountId).FirstOrDefaultAsync();
-            var destinationAccount = await _dbContext.Accounts.Where(x => x.Id == request.DestinationAccountId).FirstOrDefaultAsync();
+            var destinationAccount = await _dbContext.Accounts.Where(x => x.Number == request.DestinationAccountNumber).FirstOrDefaultAsync();
             if (account == null || destinationAccount == null) { throw new AccountNotFound(); }
             return new GetTransferMoneyRatesResponse
             {

@@ -21,7 +21,7 @@ namespace CoreService.Helpers.Mappers
                 )
                 .ForMember(
                     dest => dest.Type,
-                    opt => opt.MapFrom(opt => opt.Type)
+                    opt => opt.Ignore()
                 )
                 .ForMember(
                     dest => dest.PerformedAt,
@@ -43,7 +43,7 @@ namespace CoreService.Helpers.Mappers
                 )
                 .ForMember(
                     dest => dest.Type,
-                    opt => opt.MapFrom(opt => opt.Type)
+                    opt => opt.Ignore()
                 )
                 .ForMember(
                     dest => dest.PerformedAt,
