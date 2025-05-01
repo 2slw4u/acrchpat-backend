@@ -11,5 +11,7 @@ namespace CoreService.Models.Http.Request.Account
         public AccountCreateModel NewAccount { get; set; }
         [FromHeader]
         public Guid? TraceId { get; set; }
+        [FromHeader(Name = "Idempotency-Key")]
+        public string IdempotencyKey { get; set; }
     }
 }

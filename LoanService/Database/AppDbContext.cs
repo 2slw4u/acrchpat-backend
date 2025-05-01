@@ -11,4 +11,5 @@ public class AppDbContext : DbContext
     public DbSet<Loan> Loans { get; set; }
     
     public DbSet<LoanPayment> LoanPayments { get; set; }
+    public DbSet<Request> Requests { get; set; }
 }

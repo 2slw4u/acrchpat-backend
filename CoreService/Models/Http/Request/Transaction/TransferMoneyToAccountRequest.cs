@@ -16,5 +16,8 @@ namespace CoreService.Models.Http.Request.Transaction
         public double Amount { get; set; }
         [FromHeader]
         public Guid? TraceId { get; set; }
+
+        [FromHeader(Name = "Idempotency-Key")]
+        public string IdempotencyKey { get; set; }
     }
 }

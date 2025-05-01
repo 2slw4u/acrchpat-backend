@@ -8,6 +8,7 @@ using LoanService.Models.General;
 using LoanService.Models.Loan;
 using LoanService.Models.Rate;
 using LoanService.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 
 namespace LoanService.Services.Logic;
@@ -37,8 +38,29 @@ public class LoanManagerService(AppDbContext dbContext,
         };
     }
 
-    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles)
+    public async Task<LoanDetailDto> CreateLoan(Guid userId, LoanCreateModel model, List<RoleDto> roles, string? idempotencyKey)
     {
+        Request? requestEntity = null;
+        if (idempotencyKey != null && idempotencyKey != "")
+        {
+            requestEntity = dbContext.Requests.Where(x => x.IdempotencyKey == idempotencyKey).FirstOrDefault();
+        }
+        if (requestEntity != null)
+        {
+            throw new RequestIsAlreadyProcessing("Запрос находится в обработке или уже был обработан");
+        }
+        else if (idempotencyKey != null && idempotencyKey != "")
+        {
+            var newRequestEntity = new Request
+            {
+                Id = Guid.NewGuid(),
+                IdempotencyKey = idempotencyKey,
+                OperationName = "CreateLoan"
+            };
+            dbContext.Requests.Add(newRequestEntity);
+            await dbContext.SaveChangesAsync();
+        }
+
         var deadlineTime = DateTime.UtcNow.AddDays(model.TermDays);
         
         var rate = await dbContext.Rates
@@ -157,8 +179,29 @@ public class LoanManagerService(AppDbContext dbContext,
         };
     }
 
-    public async Task<string> PayLoan(Guid userId, Guid loanId, Guid? paymentId, Guid? accountId)
+    public async Task<string> PayLoan(Guid userId, Guid loanId, Guid? paymentId, Guid? accountId, string? idempotencyKey)
     {
+        Request? requestEntity = null;
+        if (idempotencyKey != null && idempotencyKey != "")
+        {
+            requestEntity = dbContext.Requests.Where(x => x.IdempotencyKey == idempotencyKey).FirstOrDefault();
+        }
+        if (requestEntity != null)
+        {
+            throw new RequestIsAlreadyProcessing("Запрос находится в обработке или уже был обработан");
+        }
+        else if (idempotencyKey != null && idempotencyKey != "")
+        {
+            var newRequestEntity = new Request
+            {
+                Id = Guid.NewGuid(),
+                IdempotencyKey = idempotencyKey,
+                OperationName = "CreateLoan"
+            };
+            dbContext.Requests.Add(newRequestEntity);
+            await dbContext.SaveChangesAsync();
+        }
+
         var loan = await dbContext.Loans
             .Include(l => l.Payments)
             .FirstOrDefaultAsync(l => l.Id == loanId);

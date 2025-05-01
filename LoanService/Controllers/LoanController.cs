@@ -53,12 +53,12 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     [ProducesResponseType(typeof(ResponseModel), 403)]
     [ProducesResponseType(typeof(ResponseModel), 404)]
     [ProducesResponseType(typeof(ResponseModel), 500)]
-    public async Task<IActionResult> CreateLoan(LoanCreateModel model)
+    public async Task<IActionResult> CreateLoan(LoanCreateModel model, [FromHeader(Name = "Idempotency-Key")] string? IdempotencyKey)
     {
         var userId = (Guid)HttpContext.Items["UserId"];
         var userRoles = (List<RoleDto>)HttpContext.Items["Roles"];
         
-        return Ok(await loanService.CreateLoan(userId, model, userRoles));
+        return Ok(await loanService.CreateLoan(userId, model, userRoles, IdempotencyKey));
     }
     
     /// <response code="200">Данные о кредите получены</response>
@@ -105,11 +105,11 @@ public class LoanController(ILoanManagerService loanService) : ControllerBase
     public async Task<IActionResult> PayLoan(
         Guid id,
         [FromQuery] Guid? paymentId,
-        [FromQuery] Guid? accountId
-        )
+        [FromQuery] Guid? accountId,
+        [FromHeader(Name = "Idempotency-Key")] string? IdempotencyKey)
     {
         var userId = (Guid)HttpContext.Items["UserId"];
-        return Ok(await loanService.PayLoan(userId, id, paymentId, accountId));
+        return Ok(await loanService.PayLoan(userId, id, paymentId, accountId, IdempotencyKey));
     }
     
     /// <response code="200">Кредит удален</response>

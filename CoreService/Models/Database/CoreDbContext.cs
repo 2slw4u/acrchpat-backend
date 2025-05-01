@@ -9,7 +9,7 @@ namespace CoreService.Models.Database
 
         public DbSet<AccountEntity> Accounts { get; set; }
         public DbSet<TransactionEntity> Transactions { get; set; }
-
+        public DbSet<RequestEntity> Requests { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<AccountEntity>()

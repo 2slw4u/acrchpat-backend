@@ -4,7 +4,7 @@ namespace LoanService.Services.Interfaces;
 
 public interface IRateService
 {
-    Task<Guid> CreateRate(RateCreateModel model);
+    Task<Guid> CreateRate(RateCreateModel model, string? idempotencyKey);
 
     Task<List<RateDto>> RateList();
 }

@@ -10,8 +10,29 @@ namespace LoanService.Services.Logic;
 public class RateService(AppDbContext dbContext) : IRateService
 {
     
-    public async Task<Guid> CreateRate(RateCreateModel model)
+    public async Task<Guid> CreateRate(RateCreateModel model, string? idempotencyKey)
     {
+        Request? requestEntity = null;
+        if (idempotencyKey != null && idempotencyKey != "")
+        {
+            requestEntity = dbContext.Requests.Where(x => x.IdempotencyKey == idempotencyKey).FirstOrDefault();
+        }
+        if (requestEntity != null)
+        {
+            throw new RequestIsAlreadyProcessing("Запрос находится в обработке или уже был обработан");
+        }
+        else if (idempotencyKey != null && idempotencyKey != "")
+        {
+            var newRequestEntity = new Request
+            {
+                Id = Guid.NewGuid(),
+                IdempotencyKey = idempotencyKey,
+                OperationName = "CreateRate"
+            };
+            dbContext.Requests.Add(newRequestEntity);
+            await dbContext.SaveChangesAsync();
+        }
+
         var existingRate = dbContext.Rates
             .FirstOrDefault(r => r.Name == model.Name);
 

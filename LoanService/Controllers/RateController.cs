@@ -26,14 +26,14 @@ namespace LoanService.Controllers
         [ProducesResponseType(typeof(ResponseModel), 401)]
         [ProducesResponseType(typeof(ResponseModel), 403)]
         [ProducesResponseType(typeof(ResponseModel), 500)]
-        public async Task<IActionResult> CreateRate(RateCreateModel model)
+        public async Task<IActionResult> CreateRate(RateCreateModel model, [FromHeader(Name = "Idempotency-Key")] string? IdempotencyKey)
         {
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
             
-            return Ok(await rateService.CreateRate(model));
+            return Ok(await rateService.CreateRate(model, IdempotencyKey));
         }
         
         /// <response code="200">Список получен</response>

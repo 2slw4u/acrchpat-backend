@@ -73,6 +73,27 @@ namespace CoreService.Services
 
         public async Task<OpenNewAccountResponse> OpenNewAccount(HttpContext httpContext, OpenNewAccountRequest request)
         {
+            RequestEntity? requestEntity = null;
+            if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                requestEntity = _dbContext.Requests.Where(x => x.IdempotencyKey == request.IdempotencyKey).FirstOrDefault();
+            }
+            if (requestEntity != null)
+            {
+                throw new RequestIsAlreadyProcessing();
+            }
+            else if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                var newRequestEntity = new RequestEntity
+                {
+                    Id = Guid.NewGuid(),
+                    IdempotencyKey = request.IdempotencyKey,
+                    OperationName = "OpenNewAccount"
+                };
+                _dbContext.Requests.Add(newRequestEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+
             var userId = ContextDataHelper.GetUserId(httpContext);
             var accountNumbers = await _dbContext.Accounts.Select(x => x.Number).ToListAsync();
             Random random = new Random();

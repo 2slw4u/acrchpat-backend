@@ -78,6 +78,27 @@ namespace CoreService.Services
 
         public async Task DepositMoneyToAccount(HttpContext httpContext, DepositMoneyToAccountRequest request)
         {
+            RequestEntity? requestEntity = null;
+            if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                requestEntity = _dbContext.Requests.Where(x => x.IdempotencyKey == request.IdempotencyKey).FirstOrDefault();
+            }
+            if (requestEntity != null)
+            {
+                throw new RequestIsAlreadyProcessing();
+            }
+            else if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                var newRequestEntity = new RequestEntity
+                {
+                    Id = Guid.NewGuid(),
+                    IdempotencyKey = request.IdempotencyKey,
+                    OperationName = "DepositMoneyToAccount"
+                };
+                _dbContext.Requests.Add(newRequestEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
             if (account == null)
@@ -103,6 +124,27 @@ namespace CoreService.Services
 
         public async Task WithdrawMoneyFromAccount(HttpContext httpContext, WithdrawMoneyFromAccountRequest request)
         {
+            RequestEntity? requestEntity = null;
+            if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                requestEntity = _dbContext.Requests.Where(x => x.IdempotencyKey == request.IdempotencyKey).FirstOrDefault();
+            }
+            if (requestEntity != null)
+            {
+                throw new RequestIsAlreadyProcessing();
+            }
+            else if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                var newRequestEntity = new RequestEntity
+                {
+                    Id = Guid.NewGuid(),
+                    IdempotencyKey = request.IdempotencyKey,
+                    OperationName = "WithdrawMoneyFromAccount"
+                };
+                _dbContext.Requests.Add(newRequestEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefault();
             if (account == null)
@@ -131,6 +173,27 @@ namespace CoreService.Services
         }
         public async Task TransferMoneyToAccount(HttpContext httpContext, TransferMoneyToAccountRequest request)
         {
+            RequestEntity? requestEntity = null;
+            if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                requestEntity = _dbContext.Requests.Where(x => x.IdempotencyKey == request.IdempotencyKey).FirstOrDefault();
+            }
+            if (requestEntity != null)
+            {
+                throw new RequestIsAlreadyProcessing();
+            }
+            else if (request.IdempotencyKey != null && request.IdempotencyKey != "")
+            {
+                var newRequestEntity = new RequestEntity
+                {
+                    Id = Guid.NewGuid(),
+                    IdempotencyKey = request.IdempotencyKey,
+                    OperationName = "TransferMoneyToAccount"
+                };
+                _dbContext.Requests.Add(newRequestEntity);
+                await _dbContext.SaveChangesAsync();
+            }
+
             var userId = ContextDataHelper.GetUserId(httpContext);
             var account = await _dbContext.Accounts.Where(x => x.Id == request.accountId).FirstOrDefaultAsync();
             var destinationAccount = await _dbContext.Accounts.Where(x => x.Number == request.DestinationAccountNumber).FirstOrDefaultAsync();

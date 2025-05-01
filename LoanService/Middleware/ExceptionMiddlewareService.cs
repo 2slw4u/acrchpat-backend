@@ -74,6 +74,13 @@ public class ExceptionMiddlewareService(RequestDelegate next, ILogger<ExceptionM
             { Status = "Internal Server Error", Message = ex.Message });
             throw ex;
         }
+        catch (RequestIsAlreadyProcessing ex)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            await context.Response.WriteAsJsonAsync(new ResponseModel
+                { Status = "Data Conflict Error", Message = ex.Message });
+            throw ex;
+        }
         catch (Exception ex)
         {
             context.Response.StatusCode = StatusCodes.Status500InternalServerError;
