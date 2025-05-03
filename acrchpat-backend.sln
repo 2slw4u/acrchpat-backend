@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UserService", "UserService\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PreferenceService", "PreferenceService\PreferenceService.csproj", "{1C0AB2C1-7933-4164-AC67-CB63EE4D572F}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonitorService", "MonitorService\MonitorService.csproj", "{E3CC006E-4512-405C-B7B3-BB94A214ADDD}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{1C0AB2C1-7933-4164-AC67-CB63EE4D572F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1C0AB2C1-7933-4164-AC67-CB63EE4D572F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1C0AB2C1-7933-4164-AC67-CB63EE4D572F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3CC006E-4512-405C-B7B3-BB94A214ADDD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3CC006E-4512-405C-B7B3-BB94A214ADDD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3CC006E-4512-405C-B7B3-BB94A214ADDD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3CC006E-4512-405C-B7B3-BB94A214ADDD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
