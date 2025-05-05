@@ -1,6 +1,6 @@
-﻿using LoanService.Models.General;
+﻿using UserService.Models.DTOs;
 
-namespace LoanService.Middleware;
+namespace UserService.Middlewares.Failure;
 
 public class FailureImitatorMiddleware(RequestDelegate next)
 {

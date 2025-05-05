@@ -138,7 +138,7 @@ app.UseCors("AllowAll");
 
 app.UseMiddleware<MonitoringMiddlewareService>();
 app.UseExceptionMiddleware();
-/*app.UseMiddleware<FailureImitatorMiddleware>();*/
+app.UseMiddleware<FailureImitatorMiddleware>();
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();

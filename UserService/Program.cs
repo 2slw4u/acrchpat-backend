@@ -19,6 +19,8 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using Duende.IdentityServer;
+using Polly;
+using UserService.Middlewares.Failure;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -183,6 +185,26 @@ builder.Services.AddScoped<UserBanStatusMessager>();
 builder.Services.AddScoped<IBanService, BanService>();
 builder.Services.AddSingleton<IRabbitMqProducerService, RabbitMqProducerService>();
 
+builder.Services.AddHttpClient("ResilientClient")
+    .AddTransientHttpErrorPolicy(policy => policy
+        .WaitAndRetryAsync(
+            retryCount: 3,
+            sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
+            onRetry: (outcome, timespan, attempt, context) =>
+            {
+                Console.WriteLine($"Retry {attempt} after {timespan.TotalSeconds}s due to {outcome.Exception?.Message}");
+            }))
+    .AddTransientHttpErrorPolicy(policy => policy
+        .CircuitBreakerAsync(
+            handledEventsAllowedBeforeBreaking: 3,
+            durationOfBreak: TimeSpan.FromSeconds(15),
+            onBreak: (result, breakDelay) =>
+            {
+                Console.WriteLine($"Circuit broken for {breakDelay.TotalSeconds}s due to {result.Exception?.Message}");
+            },
+            onReset: () => Console.WriteLine("Circuit reset"),
+            onHalfOpen: () => Console.WriteLine("Circuit half-open")));
+
 var app = builder.Build();
 
 using var serviceScope = app.Services.GetRequiredService<IServiceScopeFactory>().CreateScope();
@@ -199,6 +221,8 @@ catch (Exception ex)
 app.UseMonitoringMiddlewareService();
 
 app.UseExceptionMiddleware();
+
+app.UseMiddleware<FailureImitatorMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();

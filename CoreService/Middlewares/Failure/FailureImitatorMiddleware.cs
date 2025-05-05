@@ -1,6 +1,6 @@
-﻿using LoanService.Models.General;
+﻿using CoreService.Models.Http.Response.Error;
 
-namespace LoanService.Middleware;
+namespace CoreService.Middlewares.Failure;
 
 public class FailureImitatorMiddleware(RequestDelegate next)
 {
