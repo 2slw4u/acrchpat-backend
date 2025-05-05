@@ -1,12 +1,14 @@
 using System.Text;
-using PreferenceService.Database;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using FirebaseAdmin;
+using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using PreferenceService.Integrations;
-using PreferenceService.Middleware;
-using PreferenceService.Services;
+using Microsoft.OpenApi.Models;
+using NotificationService.Integrations;
+using NotificationService.Middleware;
+using NotificationService.Services;
+using NotificationService.Integrations;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,10 +30,10 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
 builder.Services.AddAuthentication(options =>
-    {
-        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-    })
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
     .AddJwtBearer(options =>
     {
         options.RefreshOnIssuerKeyNotFound = true;
@@ -80,8 +82,9 @@ if (!builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://0.0.0.0:80");
 }
-builder.Services.AddScoped<IPreferenceManager, PreferenceManager>();
+builder.Services.AddScoped<NotificationManager>();
 builder.Services.AddScoped<UserRequester>();
+builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
@@ -102,12 +105,18 @@ using (var scope = app.Services.CreateScope())
     }
 }
 
+FirebaseApp.Create(new AppOptions
+{
+    Credential = GoogleCredential
+        .FromFile("acrchpat-firebase-adminsdk-fbsvc-4ffc352dbb.json")
+});
+
 app.UseCors("AllowAll");
-//app.UseMiddleware<AuthorizationMiddleware>();
+app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
 app.UseExceptionMiddleware();
-//app.UseAuthorization();
+app.UseAuthorization();
 app.MapControllers();
 app.Run();
