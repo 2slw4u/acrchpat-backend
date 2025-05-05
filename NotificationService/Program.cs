@@ -108,7 +108,7 @@ using (var scope = app.Services.CreateScope())
 FirebaseApp.Create(new AppOptions
 {
     Credential = GoogleCredential
-        .FromFile("acrchpat-firebase-adminsdk-fbsvc-4ffc352dbb.json")
+        .FromFile("acrchpat-firebase-adminsdk-fbsvc-473ce794bc.json")
 });
 
 app.UseCors("AllowAll");
