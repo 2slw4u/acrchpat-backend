@@ -6,5 +6,6 @@ namespace CoreService.Integrations.AMQP.RabbitMQ.Producer
     {
         Task SendTransactionResultMessage(TransactionResultDTO message);
         Task SendTransactionRequestMessage(TransactionRequestDTO message);
+        Task SendOperationResultLogMessage(OperationResultLogDTO message);
     }
 }

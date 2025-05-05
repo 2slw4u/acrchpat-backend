@@ -9,5 +9,7 @@ namespace CoreService.Models.Http.Request.Account
         [FromBody]
         [Required]
         public AccountCreateModel NewAccount { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }

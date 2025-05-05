@@ -8,5 +8,7 @@ namespace CoreService.Models.Http.Request.Support
         [Required]
         [FromRoute]
         public Guid accountId { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }

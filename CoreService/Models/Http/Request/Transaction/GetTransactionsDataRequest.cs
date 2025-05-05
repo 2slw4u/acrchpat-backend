@@ -8,5 +8,7 @@ namespace CoreService.Models.Http.Request.Transaction
         [Required]
         [FromQuery]
         public List<Guid> Transactions { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }

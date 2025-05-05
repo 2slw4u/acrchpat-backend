@@ -12,5 +12,7 @@ namespace CoreService.Models.Http.Request.Account
         [FromBody]
         [Required]
         public AccountChangeModel NewAccountParameters { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }
