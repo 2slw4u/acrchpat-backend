@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
-
+using Polly;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +95,26 @@ builder.Services.AddHostedService<LoanAutopaymentProcessor>();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHttpClient();
 
+builder.Services.AddHttpClient("ResilientClient")
+    .AddTransientHttpErrorPolicy(policy => policy
+        .WaitAndRetryAsync(
+            retryCount: 3,
+            sleepDurationProvider: attempt => TimeSpan.FromSeconds(Math.Pow(2, attempt)),
+            onRetry: (outcome, timespan, attempt, context) =>
+            {
+                Console.WriteLine($"Retry {attempt} after {timespan.TotalSeconds}s due to {outcome.Exception?.Message}");
+            }))
+    .AddTransientHttpErrorPolicy(policy => policy
+        .CircuitBreakerAsync(
+            handledEventsAllowedBeforeBreaking: 3,
+            durationOfBreak: TimeSpan.FromSeconds(15),
+            onBreak: (result, breakDelay) =>
+            {
+                Console.WriteLine($"Circuit broken for {breakDelay.TotalSeconds}s due to {result.Exception?.Message}");
+            },
+            onReset: () => Console.WriteLine("Circuit reset"),
+            onHalfOpen: () => Console.WriteLine("Circuit half-open")));
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -113,6 +133,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("AllowAll");
+app.UseMiddleware<FailureImitatorMiddleware>();
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();

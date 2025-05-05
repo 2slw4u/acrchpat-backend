@@ -105,6 +105,24 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres-noti:
+    image: postgres:17
+    container_name: postgres_noti_db
+    restart: always
+    environment:
+      POSTGRES_USER: notiuser
+      POSTGRES_PASSWORD: notipassword
+      POSTGRES_DB: notidb
+    ports:
+      - "5438:5432"
+    volumes:
+      - postgres_noti_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "notidb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
   coreservice:
     build:
       context: ./CoreService
@@ -175,9 +193,24 @@ services:
       - ASPNETCORE_ENVIRONMENT=Production
       - ConnectionStrings__DefaultConnection=Host=postgres-moni;Port=5432;Database=monidb;Username=moniuser;Password=monipassword
 
+  notiservice:
+    build:
+      context: ./NotificationService
+    depends_on:
+      postgres-noti:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5006:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ConnectionStrings__DefaultConnection=Host=postgres-noti;Port=5432;Database=notidb;Username=notiuser;Password=notipassword
+
 volumes:
   postgres_core_data:
   postgres_loan_data:
   postgres_user_data:
   postgres_pref_data:
   postgres_moni_data:
+  postgres_noti_data:
