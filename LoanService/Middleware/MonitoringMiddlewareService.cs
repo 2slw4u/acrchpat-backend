@@ -55,6 +55,7 @@ namespace LoanService.Middleware
                 Console.WriteLine($"{(int)(sw.ElapsedMilliseconds * 1000)}, {result.ErrorMessage}");
                 result.StatusCode = context.Response.StatusCode;
                 if (result.StatusCode == 401) result.ErrorMessage = "401 Unauthorized - please provide a bearer token";
+                if (result.StatusCode >= 400) result.IsSuccessful = false;
                 result.ExecutionTime = (int)(sw.ElapsedMilliseconds * 1000);
                 result.OperationName = $"{context.Request.Method}: {context.Request.Path}";
                 using (var scope = _serviceProvider.CreateScope())
