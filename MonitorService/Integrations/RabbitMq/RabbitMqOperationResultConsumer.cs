@@ -73,7 +73,7 @@ public class RabbitMqOperationResultConsumer(
 
             await _channel.QueueDeclareAsync(
                 queue: QueueName,
-                durable: false,
+                durable: true,
                 exclusive: false,
                 autoDelete: false,
                 arguments: null,

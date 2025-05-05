@@ -23,6 +23,7 @@ namespace CoreService.Integrations.Http.UserService
                 HttpClient client = new();
                 string url = $"{serviceUrl}{_configuration["Integrations:Http:UserService:GetCurrentUserOperationRoute"]}";
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", request.BearerToken);
+                client.DefaultRequestHeaders.Add("TraceId", request.TraceId.ToString());
                 HttpResponseMessage authResponse = await client.GetAsync(url);
 
                 if (authResponse.StatusCode == HttpStatusCode.Forbidden)
