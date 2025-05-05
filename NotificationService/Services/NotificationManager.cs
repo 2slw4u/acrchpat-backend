@@ -36,6 +36,8 @@ public class NotificationManager
                        .Concat(employeeTokens.Select(t => BuildMsg(t, result, true)))
                        .ToList();
 
+        _logger.LogInformation(messages.Count.ToString());
+
         if (!messages.Any())
         {
             _logger.LogInformation("No recipient {userId}", result.UserId);
@@ -124,6 +126,7 @@ public class NotificationManager
         else
         {
             row.UserId = userId;
+            row.Role = dto.Role;
         }
 
         await _context.SaveChangesAsync();
