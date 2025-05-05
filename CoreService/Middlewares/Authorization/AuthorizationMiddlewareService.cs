@@ -75,13 +75,11 @@ namespace CoreService.Middlewares.Authorization
                 string token = authHeader.ToString().Replace("Bearer ", "");
                 var login = this.ExtractUserLogin(token);
                 var userParameters = _cache.GetUserParametersFromCache(login);
-                var traceId = Guid.Parse(httpContext.Request.Headers["TraceId"].ToString());
                 if (userParameters == null)
                 {
                     var getCurrentClientResponse = await _userService.GetCurrentUser(httpContext, new GetCurrentUserRequest
                     {
-                        BearerToken = token,
-                        TraceId = traceId
+                        BearerToken = token
                     });
                     userParameters = _mapper.Map<UserParametersCacheEntry>(getCurrentClientResponse);
                     _cache.InsertUserParametersIntoCache(login, userParameters);

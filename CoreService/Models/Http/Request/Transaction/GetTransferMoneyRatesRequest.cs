@@ -11,7 +11,5 @@ namespace CoreService.Models.Http.Request.Transaction
         [Required]
         [FromQuery]
         public string DestinationAccountNumber { get; set; }
-        [FromHeader]
-        public Guid? TraceId { get; set; }
     }
 }

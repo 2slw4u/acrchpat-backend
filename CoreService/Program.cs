@@ -137,13 +137,9 @@ app.UseSwaggerUI();
 app.UseCors("AllowAll");
 app.UseHttpsRedirection();
 
-app.UseMonitoringMiddlewareService();
-
 app.UseAuthorizationMiddleware();
 
 app.UseExceptionMiddleware();
-
-
 
 app.UseAuthorization();
 

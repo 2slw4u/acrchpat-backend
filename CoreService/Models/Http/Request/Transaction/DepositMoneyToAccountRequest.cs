@@ -12,7 +12,5 @@ namespace CoreService.Models.Http.Request.Transaction
         [FromBody]
         [Required]
         public MoneyChangeModel Deposit { get; set; }
-        [FromHeader]
-        public Guid? TraceId { get; set; }
     }
 }

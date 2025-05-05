@@ -7,7 +7,5 @@ namespace CoreService.Models.Http.Request.Transaction
     {
         [FromQuery]
         public List<Guid>? Accounts { get; set; }
-        [FromHeader]
-        public Guid? TraceId { get; set; }
     }
 }

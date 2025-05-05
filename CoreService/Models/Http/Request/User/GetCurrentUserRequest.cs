@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace CoreService.Models.Http.Request.User
 {
@@ -7,8 +6,5 @@ namespace CoreService.Models.Http.Request.User
     {
         [Required]
         public string BearerToken { get; set; }
-        [FromHeader]
-        [Required]
-        public Guid TraceId { get; set; }
     }
 }

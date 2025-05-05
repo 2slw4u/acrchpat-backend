@@ -14,7 +14,5 @@ namespace CoreService.Models.Http.Request.Transaction
         [Required]
         [FromQuery]
         public double Amount { get; set; }
-        [FromHeader]
-        public Guid? TraceId { get; set; }
     }
 }
