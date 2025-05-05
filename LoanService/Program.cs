@@ -1,6 +1,7 @@
 using System.Text;
 using LoanService.Database;
 using LoanService.Integrations;
+using LoanService.Integrations.HttpRequesters;
 using LoanService.Middleware;
 using LoanService.Services;
 using LoanService.Services.Interfaces;
@@ -88,8 +89,9 @@ if (!builder.Environment.IsDevelopment())
 builder.Services.AddScoped<IRateService, RateService>();
 builder.Services.AddScoped<ILoanManagerService, LoanManagerService>();
 builder.Services.AddSingleton<IRabbitMqTransactionRequestProducer, RabbitMqTransactionRequestProducer>();
-builder.Services.AddScoped<UserRequester>();
-builder.Services.AddScoped<CoreRequester>();
+builder.Services.AddSingleton<IRabbitMqLogOperationResultProducer, RabbitMqLogOperationResultProducer>();
+builder.Services.AddSingleton<UserRequester>();
+builder.Services.AddSingleton<CoreRequester>();
 builder.Services.AddHostedService<RabbitMqTransactionResultConsumer>();
 builder.Services.AddHostedService<LoanAutopaymentProcessor>();
 builder.Services.AddHttpContextAccessor();
@@ -133,12 +135,14 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseCors("AllowAll");
-app.UseMiddleware<FailureImitatorMiddleware>();
+
+app.UseMiddleware<MonitoringMiddlewareService>();
+app.UseExceptionMiddleware();
+/*app.UseMiddleware<FailureImitatorMiddleware>();*/
 app.UseMiddleware<AuthorizationMiddleware>();
 app.UseSwagger();
 app.UseSwaggerUI();
 app.UseHttpsRedirection();
-app.UseExceptionMiddleware();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();

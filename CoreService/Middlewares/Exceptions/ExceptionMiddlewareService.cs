@@ -20,11 +20,13 @@ namespace CoreService.Middlewares.Exceptions
             }
             catch (ExceptionToResponseProxy ex)
             {
-                await ExceptionHandler.HandleHttpException(context, ex);
+                if (!context.Response.HasStarted) await ExceptionHandler.HandleHttpException(context, ex);
+                throw ex;
             }
             catch (Exception ex)
             {
-                await ExceptionHandler.HandleSystemException(context, ex);                
+                if (!context.Response.HasStarted) await ExceptionHandler.HandleSystemException(context, ex);
+                throw ex;
             }
         }
     }

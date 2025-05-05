@@ -23,7 +23,7 @@ namespace UserService.Controllers
 		[Route("register")]
 		[AllowAnonymous]
 		[ProducesResponseType(typeof(AuthenticationResponse), 200)]
-		public async Task<IActionResult> Register([FromBody] UserCreateDto newUser)
+		public async Task<IActionResult> Register([FromBody] UserCreateDto newUser, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.Register(newUser);
 			return Ok(result);
@@ -33,7 +33,7 @@ namespace UserService.Controllers
 		[Authorize(Roles = "Employee")]
 		[Route("create")]
 		[ProducesResponseType(typeof(UserDto), 200)]
-		public async Task<IActionResult> CreateUser([FromBody] UserCreateDto newUser)
+		public async Task<IActionResult> CreateUser([FromBody] UserCreateDto newUser, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.CreateUser(newUser);
 			return Ok(result);
@@ -43,7 +43,7 @@ namespace UserService.Controllers
 		[Route("login")]
 		[AllowAnonymous]
 		[ProducesResponseType(typeof(AuthenticationResponse), 200)]
-		public async Task<IActionResult> Login([FromBody] LoginDto newUser)
+		public async Task<IActionResult> Login([FromBody] LoginDto newUser, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.Login(newUser);
 			return Ok(result);
@@ -52,7 +52,7 @@ namespace UserService.Controllers
 		[HttpGet]
 		[Route("currentUser")]
 		[ProducesResponseType(typeof(UserDto), 200)]
-		public async Task<IActionResult> GetUser()
+		public async Task<IActionResult> GetUser([FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.GetUser();
 			return Ok(result);
@@ -61,7 +61,7 @@ namespace UserService.Controllers
 		[HttpGet]
 		[Route("user/{userId}")]
 		[ProducesResponseType(typeof(UserDto), 200)]
-		public async Task<IActionResult> GetUserById(Guid userId)
+		public async Task<IActionResult> GetUserById(Guid userId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.GetUserById(userId);
 			return Ok(result);
@@ -70,7 +70,7 @@ namespace UserService.Controllers
 		[HttpGet]
 		[Route("all")]
 		[ProducesResponseType(typeof(List<UserDto>), 200)]
-		public async Task<IActionResult> GetUsers([FromQuery] Guid? roleId)
+		public async Task<IActionResult> GetUsers([FromQuery] Guid? roleId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.GetUsers(roleId);
 			return Ok(result);
@@ -80,7 +80,7 @@ namespace UserService.Controllers
 		[Route("{userId}/roles/add")]
 		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> AddRole(Guid userId, [FromQuery][Required] Guid roleId )
+		public async Task<IActionResult> AddRole(Guid userId, [FromQuery][Required] Guid roleId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.AddRole(userId, roleId);
 			return Ok(result);
@@ -90,7 +90,7 @@ namespace UserService.Controllers
 		[Authorize(Roles = "Employee")]
 		[Route("{userId}/roles/remove")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> RemoveRole(Guid userId, [FromQuery][Required] Guid roleId)
+		public async Task<IActionResult> RemoveRole(Guid userId, [FromQuery][Required] Guid roleId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _userService.RemoveRole(userId, roleId);
 			return Ok(result);

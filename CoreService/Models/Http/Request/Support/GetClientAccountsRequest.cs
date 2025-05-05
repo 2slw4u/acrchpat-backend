@@ -9,5 +9,7 @@ namespace CoreService.Models.Http.Request.Support
         [FromQuery]
         [MinLength(1)]
         public List<Guid> Users { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }

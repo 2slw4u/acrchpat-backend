@@ -1,5 +1,6 @@
 ﻿using UserService.Middlewares.Authorization;
 using UserService.Middlewares.Exceptions;
+using UserService.Middlewares.Monitoring;
 
 namespace UserService.Middlewares
 {
@@ -14,5 +15,9 @@ namespace UserService.Middlewares
 		{
 			app.UseMiddleware<AuthorizationMiddlewareService>();
 		}
-	}
+        public static void UseMonitoringMiddlewareService(this IApplicationBuilder app)
+        {
+            app.UseMiddleware<MonitoringMiddlewareService>();
+        }
+    }
 }

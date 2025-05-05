@@ -1,5 +1,6 @@
 ﻿using LoanService.Exceptions;
 using LoanService.Integrations;
+using LoanService.Integrations.HttpRequesters;
 using LoanService.Models.General;
 
 namespace LoanService.Middleware;
@@ -25,23 +26,25 @@ public class AuthorizationMiddleware(RequestDelegate next, UserRequester userReq
         }
         catch (HttpRequestFailedException ex)
         {
-            context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            throw new HttpRequestFailedException(System.Net.HttpStatusCode.Unauthorized, "Authorization error");
+            /*context.Response.StatusCode = StatusCodes.Status401Unauthorized;
             await context.Response.WriteAsJsonAsync(new ResponseModel
             {
                 Status = "Authorization error",
                 Message = ex.Message
             });
-            return;
+            return;*/
         }
         catch (Exception e)
         {
-            context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
+            throw new HttpRequestFailedException(System.Net.HttpStatusCode.GatewayTimeout, "Gateway timeout");
+            /*context.Response.StatusCode = StatusCodes.Status504GatewayTimeout;
             await context.Response.WriteAsJsonAsync(new ResponseModel
             {
                 Status = "Authorization service connection error",
                 Message = e.Message
             });
-            return;
+            return;*/
         }
 
         await next(context);

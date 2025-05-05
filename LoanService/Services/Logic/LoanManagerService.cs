@@ -2,6 +2,7 @@
 using LoanService.Database.TableModels;
 using LoanService.Exceptions;
 using LoanService.Integrations;
+using LoanService.Integrations.HttpRequesters;
 using LoanService.Middleware;
 using LoanService.Models.General;
 using LoanService.Models.Loan;

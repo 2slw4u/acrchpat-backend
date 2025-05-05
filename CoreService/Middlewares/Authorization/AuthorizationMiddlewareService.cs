@@ -17,8 +17,8 @@ namespace CoreService.Middlewares.Authorization
         private readonly IUserParametersCache _cache;
         private readonly IUserServiceAdapter _userService;
         private readonly IMapper _mapper;
-        public AuthorizationMiddlewareService(RequestDelegate next, 
-            IUserParametersCache cache, 
+        public AuthorizationMiddlewareService(RequestDelegate next,
+            IUserParametersCache cache,
             IUserServiceAdapter userService,
             IMapper mapper)
         {
@@ -40,7 +40,7 @@ namespace CoreService.Middlewares.Authorization
         //     }
         //     return login.ToString();
         // }
-        
+
         private string ExtractUserLogin(string token)
         {
             var handler = new JwtSecurityTokenHandler();
@@ -51,7 +51,7 @@ namespace CoreService.Middlewares.Authorization
             }
 
             var jwt = handler.ReadJwtToken(token);
-            
+
             var loginClaim = jwt.Claims.FirstOrDefault(x => x.Type == ClaimTypes.MobilePhone);
             if (loginClaim == null)
             {
@@ -75,11 +75,13 @@ namespace CoreService.Middlewares.Authorization
                 string token = authHeader.ToString().Replace("Bearer ", "");
                 var login = this.ExtractUserLogin(token);
                 var userParameters = _cache.GetUserParametersFromCache(login);
+                var traceId = Guid.Parse(httpContext.Request.Headers["TraceId"].ToString());
                 if (userParameters == null)
                 {
                     var getCurrentClientResponse = await _userService.GetCurrentUser(httpContext, new GetCurrentUserRequest
                     {
-                        BearerToken = token
+                        BearerToken = token,
+                        TraceId = traceId
                     });
                     userParameters = _mapper.Map<UserParametersCacheEntry>(getCurrentClientResponse);
                     _cache.InsertUserParametersIntoCache(login, userParameters);

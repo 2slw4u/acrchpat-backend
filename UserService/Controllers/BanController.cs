@@ -20,7 +20,7 @@ namespace UserService.Controllers
 		[HttpGet("history/{userId}")]
 		[Authorize]
 		[ProducesResponseType(typeof(List<BanDto>), 200)]
-		public async Task<IActionResult> GetUserBanHistory(Guid userId)
+		public async Task<IActionResult> GetUserBanHistory(Guid userId, [FromHeader] Guid? TraceId)
 		{
 			var history = await _banService.GetUserBanHistory(userId);
 			return Ok(history);
@@ -29,7 +29,7 @@ namespace UserService.Controllers
 		[HttpPost("ban/{userId}")]
 		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> BanUser(Guid userId)
+		public async Task<IActionResult> BanUser(Guid userId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _banService.BanUser(userId);
 
@@ -39,7 +39,7 @@ namespace UserService.Controllers
 		[HttpPost("unban/{userId}")]
 		[Authorize(Roles = "Employee")]
 		[ProducesResponseType(typeof(ResponseDto), 200)]
-		public async Task<IActionResult> UnbanUser(Guid userId)
+		public async Task<IActionResult> UnbanUser(Guid userId, [FromHeader] Guid? TraceId)
 		{
 			var result = await _banService.UnbanUser(userId);
 

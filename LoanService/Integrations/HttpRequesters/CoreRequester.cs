@@ -1,6 +1,6 @@
 ﻿using LoanService.Models.General;
 
-namespace LoanService.Integrations;
+namespace LoanService.Integrations.HttpRequesters;
 
 public class CoreRequester : Requester
 {

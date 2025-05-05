@@ -17,7 +17,7 @@ namespace UserService.Controllers
 		[HttpGet]
 		[Route("all")]
 		[ProducesResponseType(typeof(List<RoleDto>), 200)]
-		public async  Task<IActionResult> GetRoles()
+		public async  Task<IActionResult> GetRoles([FromHeader] Guid? TraceId)
         {
 			var result = await _rolesService.GetRoles();
 			return Ok(result);

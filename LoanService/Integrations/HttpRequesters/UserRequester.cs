@@ -1,6 +1,6 @@
 ﻿using LoanService.Middleware;
 
-namespace LoanService.Integrations;
+namespace LoanService.Integrations.HttpRequesters;
 
 public class UserRequester : Requester
 {

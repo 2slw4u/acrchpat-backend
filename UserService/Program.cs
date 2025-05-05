@@ -196,6 +196,8 @@ catch (Exception ex)
     Console.WriteLine(ex);
 }
 
+app.UseMonitoringMiddlewareService();
+
 app.UseExceptionMiddleware();
 
 app.UseSwagger();

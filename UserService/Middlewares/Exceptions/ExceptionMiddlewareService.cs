@@ -21,28 +21,33 @@ namespace UserService.Middlewares.Exceptions
 			{
 				context.Response.StatusCode = StatusCodes.Status404NotFound;
 				await context.Response.WriteAsJsonAsync(new { message = "404 Not Found: " + ex.Message });
+				throw ex;
 			}
 			catch (ForbiddenException ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status403Forbidden;
 				await context.Response.WriteAsJsonAsync(new { message = "403 Forbidden: " + ex.Message });
-			}
+                throw ex;
+            }
 			catch (BadRequestException ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status400BadRequest;
 				await context.Response.WriteAsJsonAsync(new { message = "400 BadRequst: " + ex.Message });
-			}
+                throw ex;
+            }
 			catch (UnauthorizedException ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status401Unauthorized;
 				await context.Response.WriteAsJsonAsync(new { message = "401 Unauthorized: " + ex.Message });
-			}
+                throw ex;
+            }
 			catch (Exception ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status500InternalServerError;
 				_logger.LogError(ex, "error!");
 				await context.Response.WriteAsJsonAsync(new { message = "500 Internal Server Error:" + ex.Message });
-			}
+                throw ex;
+            }
 		}
 	}
 }

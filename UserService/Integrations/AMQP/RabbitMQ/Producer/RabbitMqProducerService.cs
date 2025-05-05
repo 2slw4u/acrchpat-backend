@@ -29,7 +29,8 @@ namespace UserService.Integrations.AMQP.RabbitMQ.Producer
 				_connection = await _connectionFactory.CreateConnectionAsync();
 				_channel = await _connection.CreateChannelAsync();
 				await DeclareExchange("user.ban", ExchangeType.Fanout, durable: true, autoDelete: false);
-			}
+                await DeclareExchange("log.operation.result", ExchangeType.Fanout, durable: true, autoDelete: false);
+            }
 			catch (Exception ex)
 			{
 				Console.WriteLine($"Failed to initialize RabbitMQ: {ex}");

@@ -12,5 +12,7 @@ namespace CoreService.Models.Http.Request.Support
         [Required]
         [FromBody]
         public AccountStatus NewStatus { get; set; }
+        [FromHeader]
+        public Guid? TraceId { get; set; }
     }
 }

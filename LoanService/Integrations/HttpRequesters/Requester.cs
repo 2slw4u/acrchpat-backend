@@ -2,7 +2,7 @@
 using System.Text.Json;
 using LoanService.Exceptions;
 
-namespace LoanService.Integrations;
+namespace LoanService.Integrations.HttpRequesters;
 
 public class Requester
 {
@@ -46,9 +46,22 @@ public class Requester
         return null;
     }
 
+    private string? GetTraceIdFromContext()
+    {
+        var traceIdHeader = HttpContextAccessor.HttpContext?.Request.Headers["TraceId"].ToString();
+
+        if (!string.IsNullOrWhiteSpace(traceIdHeader))
+        {
+            return traceIdHeader;
+        }
+
+        return null;
+    }
+
     protected async Task<T> GetAsync<T>(string endpoint)
     {
         var token = GetAccessTokenFromContext();
+        var traceId = GetTraceIdFromContext();
         var url = $"{GetServiceBaseUrl()}/{endpoint.TrimStart('/')}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
@@ -56,6 +69,10 @@ public class Requester
         if (!string.IsNullOrWhiteSpace(token))
         {
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        }
+        if (!string.IsNullOrWhiteSpace(traceId))
+        {
+            request.Headers.Add("TraceId", traceId);
         }
 
         var response = await HttpClient.SendAsync(request);

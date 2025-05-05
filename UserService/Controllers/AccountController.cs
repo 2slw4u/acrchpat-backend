@@ -47,7 +47,7 @@ namespace UserService.Controllers
 
         [Authorize]
         [HttpGet("profile")]
-        public IActionResult Profile()
+        public IActionResult Profile([FromHeader] Guid? TraceId)
         {
             var claims = HttpContext.User.Claims;
             var sub = claims.FirstOrDefault(c => c.Type == "sub")?.Value;
@@ -58,14 +58,14 @@ namespace UserService.Controllers
 
         [AllowAnonymous]
         [HttpGet]
-        public IActionResult Login(string returnUrl)
+        public IActionResult Login(string returnUrl, [FromHeader] Guid? TraceId)
         {
             return View(new LoginViewModel { ReturnUrl = returnUrl });
         }
 
         [HttpPost]
         [AllowAnonymous]
-        public async Task<IActionResult> Login(LoginViewModel model, string button)
+        public async Task<IActionResult> Login(LoginViewModel model, string button, [FromHeader] Guid? TraceId)
         {
             if (button != "login")
             {
@@ -138,7 +138,7 @@ namespace UserService.Controllers
 
 		[HttpGet]
 		[AllowAnonymous]
-		public async Task<IActionResult> Logout(string logoutId)
+		public async Task<IActionResult> Logout(string logoutId, [FromHeader] Guid? TraceId)
 		{
 			_logger.LogInformation("logout begin");
 			await _signInManager.SignOutAsync();
