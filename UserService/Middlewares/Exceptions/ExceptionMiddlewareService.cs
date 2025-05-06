@@ -41,6 +41,12 @@ namespace UserService.Middlewares.Exceptions
 				await context.Response.WriteAsJsonAsync(new { message = "401 Unauthorized: " + ex.Message });
                 throw ex;
             }
+			catch (UnluckyException ex)
+			{
+                context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+                await context.Response.WriteAsJsonAsync(new { message = "500 Internal Server Error: " + ex.Message });
+                throw ex;
+            }
 			catch (Exception ex)
 			{
 				context.Response.StatusCode = StatusCodes.Status500InternalServerError;
