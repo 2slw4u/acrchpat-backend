@@ -32,9 +32,11 @@ public class NotificationManager
             .Select(t => t.FcmToken)
             .ToListAsync();
 
-        var messages = clientTokens.Select(t => BuildMsg(t, result, false))
-                       .Concat(employeeTokens.Select(t => BuildMsg(t, result, true)))
-                       .ToList();
+        var messages = clientTokens
+               .Concat(employeeTokens)
+               .Distinct()
+               .Select(t => BuildMsg(t, result, true))
+               .ToList();
 
         _logger.LogInformation(messages.Count.ToString());
 
@@ -57,6 +59,14 @@ public class NotificationManager
                                 x.r.Exception is FirebaseMessagingException f &&
                                 f.MessagingErrorCode == MessagingErrorCode.Unregistered)
                     .Select(x => batch[x.i].Token));
+
+            foreach (var r in resp.Responses)
+            {
+                if (r.IsSuccess)
+                    _logger.LogInformation($"FCM ok {r.MessageId}");
+                else
+                    _logger.LogError($"FCM err {r.Exception.MessagingErrorCode}");
+            }
         }
 
         _logger.LogInformation("Actually we've sent the notification and are genuinely hoping it reaches u <3 {userId}", result.UserId);
