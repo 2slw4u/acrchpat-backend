@@ -222,7 +222,7 @@ app.UseMonitoringMiddlewareService();
 
 app.UseExceptionMiddleware();
 
-app.UseMiddleware<FailureImitatorMiddleware>();
+//app.UseMiddleware<FailureImitatorMiddleware>();
 
 app.UseSwagger();
 app.UseSwaggerUI();
